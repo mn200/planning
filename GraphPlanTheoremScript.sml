@@ -38,7 +38,7 @@ val exec_plan_def =
 Define`(exec_plan(s, a::as) = exec_plan((state_succ_2 s a ), as))
 	 /\ (exec_plan(s, []) = s)`;
 
-val plan_def_2 = Define`(plan_2(  PROB, as) =
+val plan_2_def = Define`(plan_2(  PROB, as) =
   (planning_problem(PROB)/\ (exec_plan(PROB.I, as) = PROB.G)) /\ ((set as) SUBSET PROB.A))`; 
 
 val exec_plan_Append = store_thm("exec_plan_Append", 
@@ -69,16 +69,16 @@ THEN	SRW_TAC [][]
 		[			
 			REPEAT STRIP_TAC
 			THEN
-			FULL_SIMP_TAC(srw_ss())[plan_def_2]			
+			FULL_SIMP_TAC(srw_ss())[plan_2_def]			
 			,
 			METIS_TAC[]
 		]
 		,
 		FULL_SIMP_TAC (srw_ss()) []
 		THEN
-		METIS_TAC [plan_def_2,listTheory.APPEND]
+		METIS_TAC [plan_2_def,listTheory.APPEND]
 		THEN
-		METIS_TAC [plan_def_2]
+		METIS_TAC [plan_2_def]
  	]
 ); 
 
@@ -403,7 +403,7 @@ val lemma_1_1_1 = store_thm("lemma_1_1_1",
 val lemma_1_1 = store_thm("lemma_1_1",
 				``! PROB as h. plan_2(PROB, h::as) ==> 
     	      		  plan_2(PROB with I := state_succ_2 PROB.I h, as)``,
-	        SRW_TAC[][plan_def_2] THENL
+	        SRW_TAC[][plan_2_def] THENL
                 [
 			MATCH_MP_TAC lemma_1_1_1 THEN SRW_TAC[][] THEN 
 			MATCH_MP_TAC FDOM_state_succ THEN 
@@ -417,7 +417,7 @@ val plan_CONS = store_thm(
       plan_2(PROB with I := state_succ_2 PROB.I h, as) /\ h IN PROB.A /\
       planning_problem PROB``,
   SRW_TAC[][EQ_IMP_THM, lemma_1_1] THEN
-  FULL_SIMP_TAC (srw_ss()) [plan_def_2, planning_problem_def, exec_plan_def]);
+  FULL_SIMP_TAC (srw_ss()) [plan_2_def, planning_problem_def, exec_plan_def]);
   
 
 val IS_SUFFIX_MEM = store_thm(
@@ -464,7 +464,7 @@ val lemma_1 = store_thm("lemma_1",
      SRW_TAC[][] THEN 
      Cases_on `x'` THEN1 FULL_SIMP_TAC(srw_ss()) [] THEN 
      IMP_RES_TAC MEM_LAST' THEN 
-     METIS_TAC[MEM_statelist_FDOM,IS_PREFIX_MEM, plan_def_2, planning_problem_def]);
+     METIS_TAC[MEM_statelist_FDOM,IS_PREFIX_MEM, plan_2_def, planning_problem_def]);
 (* val lemma_1 = store_thm("lemma_1",
 ``! as PROB. plan_2( PROB,as) ==>
      ( (IMAGE (LAST) ( state_set ( state_list ( PROB.I, as ) ) )  ) SUBSET { s| (FDOM(s)) = (FDOM(PROB.I))}) ``,
@@ -594,7 +594,7 @@ THENL
      	    (FULL_SIMP_TAC(srw_ss())[state_set_def, state_list_def, exec_plan_def]
      	THEN METIS_TAC[empty_state_list_lemma])
 	THEN SRW_TAC[][]
-	THEN FULL_SIMP_TAC(srw_ss())[state_set_def, state_list_def, exec_plan_def, plan_def_2] 	
+	THEN FULL_SIMP_TAC(srw_ss())[state_set_def, state_list_def, exec_plan_def, plan_2_def] 	
 	,
 	FULL_SIMP_TAC(srw_ss())[state_set_def, state_list_def, exec_plan_def]
 	THEN Cases_on`?x y. as = SNOC x y`
@@ -609,7 +609,7 @@ THENL
 		THEN METIS_TAC[lemma_2_3_1_3_1]
 		,
 		`as = []` by METIS_TAC[SNOC_CASES]
-		THEN FULL_SIMP_TAC(srw_ss())[plan_def_2, exec_plan_def, state_set_def, state_list_def]
+		THEN FULL_SIMP_TAC(srw_ss())[plan_2_def, exec_plan_def, state_set_def, state_list_def]
 	]
 ] 
 ); *)
@@ -646,14 +646,14 @@ Induct_on`l1`
 THENL
 [
 	Induct_on`l2`
-	THEN1 FULL_SIMP_TAC(srw_ss())[exec_plan_def, plan_def_2, planning_problem_def]
-	THEN SRW_TAC[][]plan_def_2, planning_problem_def, exec_plan_def, state_succ_2_def]
+	THEN1 FULL_SIMP_TAC(srw_ss())[exec_plan_def, plan_2_def, planning_problem_def]
+	THEN SRW_TAC[][]plan_2_def, planning_problem_def, exec_plan_def, state_succ_2_def]
 	THENL
 	[
 		`plan_2((PROB with I:= (state_succ_2 PROB.I h)), l2)` by METIS_TAC[lemma_1_1]
 		THEN ``
-		`(SND h ⊌ s) = (SND h ⊌ PROB.I)` by METIS_TAC[plan_def_2, planning_problem_def, exec_plan_def, state_succ_2_def]
-		FULL_SIMP_TAC(srw_ss()) [plan_def_2, planning_problem_def, exec_plan_def, state_succ_2_def]
+		`(SND h ⊌ s) = (SND h ⊌ PROB.I)` by METIS_TAC[plan_2_def, planning_problem_def, exec_plan_def, state_succ_2_def]
+		FULL_SIMP_TAC(srw_ss()) [plan_2_def, planning_problem_def, exec_plan_def, state_succ_2_def]
 		THEN SRW_TAC[][]
 		THEN 
 		,
@@ -708,7 +708,7 @@ THENL
 	THEN Cases_on`t`
 	THENL
 	[
-		FULL_SIMP_TAC(srw_ss())[plan_def_2, planning_problem_def, exec_plan_def, state_set_def, state_list_def]
+		FULL_SIMP_TAC(srw_ss())[plan_2_def, planning_problem_def, exec_plan_def, state_set_def, state_list_def]
 		,
 		Q.REFINE_EXISTS_TAC `h'::as''`
 		THEN SRW_TAC[][exec_plan_def]
@@ -825,7 +825,7 @@ val lemma_2 = store_thm("lemma_2",
 SRW_TAC[][]
 THEN `(CARD(state_set (state_list (PROB.I,as)))) > (2 ** CARD (FDOM PROB.I)) ` by METIS_TAC[lemma_2_1]
 THEN `~INJ (LAST) (state_set (state_list (PROB.I,as))) ({s:'a state | FDOM(s) = FDOM(PROB.I)}) ` by 
-     	   (SRW_TAC[][PHP,card_of_set_of_all_possible_states, FINITE_states, plan_def_2, planning_problem_def]
+     	   (SRW_TAC[][PHP,card_of_set_of_all_possible_states, FINITE_states, plan_2_def, planning_problem_def]
 	   THEN `FINITE (FDOM PROB.I)` by SRW_TAC[][]
 	   THEN ASSUME_TAC(Q.SPEC `(FDOM PROB.I)` card_of_set_of_all_possible_states)
 	   THEN `(CARD {s:'a state | FDOM s = FDOM PROB.I} = 2 ** CARD (FDOM PROB.I))` by SRW_TAC[][]
@@ -893,20 +893,20 @@ Induct_on`as`
 THEN1 SRW_TAC[][graph_plan_lemma_1_1_1_5_1] 
 THEN SRW_TAC[][]
 THEN `plan_2 (PROB with I:=state_succ_2 PROB.I h,as)` by METIS_TAC[lemma_1_1]
-THEN `h IN PROB.A` by FULL_SIMP_TAC(srw_ss())[plan_def_2]
+THEN `h IN PROB.A` by FULL_SIMP_TAC(srw_ss())[plan_2_def]
 THEN `(FDOM PROB.I DIFF vs) SUBSET FDOM(PROB.I)` by SRW_TAC[][]
-THEN `vs SUBSET FDOM((PROB with I:= state_succ_2 PROB.I h).I)` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_def_2, planning_problem_def]
+THEN `vs SUBSET FDOM((PROB with I:= state_succ_2 PROB.I h).I)` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_2_def, planning_problem_def]
 THEN Cases_on`as<>[]`
 THENL
 [
  	`∀as'.(as' ≠ [] ∧ as' ≼ as ⇒ FST (LAST as') ⊑ LAST (state_list (state_succ_2 PROB.I h, as')))` by METIS_TAC[Q.SPEC `h` (Q.SPEC `PROB.I` (Q.SPEC `as` graph_plan_lemma_1_1_1_5_4))]
-	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),FILTER (λa. varset_action (a,vs))(MAP (λa. (DRESTRICT (FST a) vs,SND a)) as))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_5_3, FDOM_state_succ, plan_def_2, planning_problem_def, graph_plan_lemma_1_1_1_5_4]
+	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),FILTER (λa. varset_action (a,vs))(MAP (λa. (DRESTRICT (FST a) vs,SND a)) as))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_5_3, FDOM_state_succ, plan_2_def, planning_problem_def, graph_plan_lemma_1_1_1_5_4]
 	THEN `FST (h:('a state # 'a state))  SUBMAP (PROB.I:('a state))` by
      	     (SRW_TAC[][] THEN `[h] <<= h::as` by SRW_TAC[][] THEN 
      	     `FST (LAST [h]) ⊑ LAST (state_list (PROB.I,[h]))` by SRW_TAC[][LAST_compute, state_list_def] THEN 
      	     FULL_SIMP_TAC(srw_ss())[state_list_def])
 	THEN `varset_action (h,vs)` by FULL_SIMP_TAC(srw_ss())[varset_action_def]
-	THEN METIS_TAC[graph_plan_lemma_1_1_1_5_2, FDOM_state_succ, plan_def_2, planning_problem_def,prob_proj_def, varset_action_def]
+	THEN METIS_TAC[graph_plan_lemma_1_1_1_5_2, FDOM_state_succ, plan_2_def, planning_problem_def,prob_proj_def, varset_action_def]
 	,
 	SRW_TAC[][]
 	THEN SRW_TAC[][MAP]
@@ -916,19 +916,19 @@ THENL
      	     `FST (LAST [h]) ⊑ LAST (state_list (PROB.I,[h]))` by SRW_TAC[][LAST_compute, state_list_def] THEN 
      	     FULL_SIMP_TAC(srw_ss())[state_list_def])
 	THEN `varset_action (h,vs)` by FULL_SIMP_TAC(srw_ss())[varset_action_def]
-	THEN METIS_TAC[graph_plan_lemma_1_1_1_5_1, plan_def_2]
+	THEN METIS_TAC[graph_plan_lemma_1_1_1_5_1, plan_2_def]
 	,
 	`~varset_action (h,vs)` by FULL_SIMP_TAC(srw_ss())[varset_action_def]
-	THEN `planning_problem(PROB)` by FULL_SIMP_TAC(srw_ss())[plan_def_2]
-	THEN `(DRESTRICT (state_succ_2 PROB.I h) vs = DRESTRICT PROB.I vs)` by METIS_TAC[ graph_plan_lemma_1_1_1_5_5, plan_def_2]
+	THEN `planning_problem(PROB)` by FULL_SIMP_TAC(srw_ss())[plan_2_def]
+	THEN `(DRESTRICT (state_succ_2 PROB.I h) vs = DRESTRICT PROB.I vs)` by METIS_TAC[ graph_plan_lemma_1_1_1_5_5, plan_2_def]
 	THEN `prob_proj (PROB,vs)  = prob_proj (PROB with I := state_succ_2 PROB.I h,vs)` by SRW_TAC[][prob_proj_def]
 	THEN `∀as'.(as' ≠ [] ∧ as' ≼ as ⇒ FST (LAST as') ⊑ LAST (state_list (state_succ_2 PROB.I h, as')))` by METIS_TAC[Q.SPEC `h` (Q.SPEC `PROB.I` (Q.SPEC `as` graph_plan_lemma_1_1_1_5_4))]
-	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),FILTER (λa. varset_action (a,vs))(MAP (λa. (DRESTRICT (FST a) vs,SND a)) as))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_5_3, FDOM_state_succ, plan_def_2, planning_problem_def, graph_plan_lemma_1_1_1_5_4]
+	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),FILTER (λa. varset_action (a,vs))(MAP (λa. (DRESTRICT (FST a) vs,SND a)) as))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_5_3, FDOM_state_succ, plan_2_def, planning_problem_def, graph_plan_lemma_1_1_1_5_4]
 	THEN METIS_TAC[]
 	,
 	`~varset_action (h,vs)` by FULL_SIMP_TAC(srw_ss())[varset_action_def]
-	THEN `planning_problem(PROB)` by FULL_SIMP_TAC(srw_ss())[plan_def_2]
-	THEN `(DRESTRICT (state_succ_2 PROB.I h) vs = DRESTRICT PROB.I vs)` by METIS_TAC[ graph_plan_lemma_1_1_1_5_5, plan_def_2]
+	THEN `planning_problem(PROB)` by FULL_SIMP_TAC(srw_ss())[plan_2_def]
+	THEN `(DRESTRICT (state_succ_2 PROB.I h) vs = DRESTRICT PROB.I vs)` by METIS_TAC[ graph_plan_lemma_1_1_1_5_5, plan_2_def]
 	THEN `prob_proj (PROB,vs)  = prob_proj (PROB with I := state_succ_2 PROB.I h,vs)` by SRW_TAC[][prob_proj_def]
 	THEN SRW_TAC[][]
 	THEN SRW_TAC[][MAP]
@@ -954,7 +954,7 @@ THEN `plan_2
        (prob_proj (PROB,vs),
         FILTER (λa. varset_action (a,vs))
           (MAP (λa. (DRESTRICT (FST a) vs,SND a)) as))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_3_3]
-THEN `planning_problem(prob_proj(PROB,vs))` by METIS_TAC[graph_plan_lemma_1_1_1_3_2, plan_def_2] 
+THEN `planning_problem(prob_proj(PROB,vs))` by METIS_TAC[graph_plan_lemma_1_1_1_3_2, plan_2_def] 
 THEN `LENGTH (FILTER (λa. varset_action (a,vs)) (MAP (λa. (DRESTRICT (FST a) vs,SND a)) as)) > 2 ** CARD (FDOM (prob_proj (PROB,vs)).I) ` by SRW_TAC[][]
 THEN METIS_TAC[lemma_2]);
 *)
@@ -1166,8 +1166,8 @@ THEN METIS_TAC[INTER_COMM ,SUBSET_INTER_ABSORPTION]
 val graph_plan_lemma_1_1_1_3_2 = store_thm("graph_plan_lemma_1_1_1_3_2",
 ``!PROB vs. planning_problem(PROB) /\ vs SUBSET FDOM(PROB.I) 
 	==> planning_problem(prob_proj(PROB,vs))``,
-SRW_TAC[][prob_proj_def, plan_def_2, exec_plan_def, planning_problem_def]
-THEN SRW_TAC[][prob_proj_def, plan_def_2, exec_plan_def, planning_problem_def]
+SRW_TAC[][prob_proj_def, plan_2_def, exec_plan_def, planning_problem_def]
+THEN SRW_TAC[][prob_proj_def, plan_2_def, exec_plan_def, planning_problem_def]
 THEN REWRITE_TAC[DRESTRICT_DEF]
 THEN REWRITE_TAC[INTER_DEF] 
 THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF]
@@ -1177,8 +1177,8 @@ THEN METIS_TAC[SPECIFICATION]);
 
 val graph_plan_lemma_1_1_1_3_3_1 = store_thm("graph_plan_lemma_1_1_1_3_3_1",
 ``!PROB vs. plan_2(PROB,[]) /\ (vs SUBSET FDOM PROB.I) ==> plan_2(prob_proj (PROB,vs), [])``,
-SRW_TAC[][prob_proj_def, plan_def_2, exec_plan_def, planning_problem_def]
-THEN SRW_TAC[][prob_proj_def, plan_def_2, exec_plan_def, planning_problem_def]
+SRW_TAC[][prob_proj_def, plan_2_def, exec_plan_def, planning_problem_def]
+THEN SRW_TAC[][prob_proj_def, plan_2_def, exec_plan_def, planning_problem_def]
 THEN REWRITE_TAC[DRESTRICT_DEF]
 THEN REWRITE_TAC[INTER_DEF] 
 THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF]
@@ -1206,12 +1206,12 @@ THEN METIS_TAC[fmap_EQ_THM]);
 val graph_plan_lemma_1_1_1_3_3_2_2 = store_thm("graph_plan_lemma_1_1_1_3_3_2_2",
 ``!PROB as. plan_2(PROB, as) ==> (FDOM PROB.I = FDOM PROB.G)``,
 Induct_on`as`
-THEN1 SRW_TAC[][plan_def_2, exec_plan_def]
+THEN1 SRW_TAC[][plan_2_def, exec_plan_def]
 THEN SRW_TAC[][]
 THEN `plan_2 (PROB with I:=state_succ_2 PROB.I h ,as)` by METIS_TAC[lemma_1_1]
 THEN `FDOM (PROB with I := state_succ_2 PROB.I h).I = FDOM (PROB with I := state_succ_2 PROB.I h).G`  by METIS_TAC[]
 THEN `FDOM (PROB with I := state_succ_2 PROB.I h).G = FDOM(PROB.G)` by SRW_TAC[][state_succ_2_def]
-THEN METIS_TAC[FDOM_state_succ, plan_def_2, planning_problem_def, exec_plan_def]
+THEN METIS_TAC[FDOM_state_succ, plan_2_def, planning_problem_def, exec_plan_def]
 );
 
 val graph_plan_lemma_1_1_1_3_3_2_3 = store_thm("graph_plan_lemma_1_1_1_3_3_2_3",
@@ -1258,7 +1258,7 @@ Cases_on`as`
 THENL
 [
 	SRW_TAC[][]
-	THEN FULL_SIMP_TAC(srw_ss())[ plan_def_2]
+	THEN FULL_SIMP_TAC(srw_ss())[ plan_2_def]
 	THEN SRW_TAC[][]
 	THENL
 	[
@@ -1288,7 +1288,7 @@ THENL
 		THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_2_7]
 	]
 	,
-	SRW_TAC[][plan_def_2]
+	SRW_TAC[][plan_2_def]
 	THENL
 	[
 		FULL_SIMP_TAC(srw_ss())[planning_problem_def]
@@ -1385,7 +1385,7 @@ val graph_plan_lemma_1_1_1_3_3_7 = store_thm("graph_plan_lemma_1_1_1_3_3_7",
 h IN PROB.A /\ planning_problem(PROB) /\ FST h SUBMAP PROB.I /\ (plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),as))
     ==>
 (plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I (action_proj(h,vs)),vs),as))``,
-FULL_SIMP_TAC(srw_ss())[plan_def_2]
+FULL_SIMP_TAC(srw_ss())[plan_2_def]
 THEN SRW_TAC[][]
 THENL
 [
@@ -1447,7 +1447,7 @@ Cases_on`as`
 THENL
 [
 	SRW_TAC[][]
-	THEN FULL_SIMP_TAC(srw_ss())[ plan_def_2]
+	THEN FULL_SIMP_TAC(srw_ss())[ plan_2_def]
 	THEN SRW_TAC[][]
 	THENL
 	[
@@ -1470,7 +1470,7 @@ THENL
 		THEN METIS_TAC[]
 	]
 	,
-	SRW_TAC[][plan_def_2]
+	SRW_TAC[][plan_2_def]
 	THENL
 	[
 		FULL_SIMP_TAC(srw_ss())[planning_problem_def]
@@ -1568,23 +1568,23 @@ Induct_on`as`
 THEN1 SRW_TAC[][graph_plan_lemma_1_1_1_3_3_1, as_proj_def] 
 THEN SRW_TAC[][]
 THEN `plan_2 (PROB with I:=state_succ_2 PROB.I h,as)` by METIS_TAC[lemma_1_1]
-THEN `h IN PROB.A` by FULL_SIMP_TAC(srw_ss())[plan_def_2]
+THEN `h IN PROB.A` by FULL_SIMP_TAC(srw_ss())[plan_2_def]
 THEN `(FDOM PROB.I DIFF vs) SUBSET FDOM(PROB.I)` by SRW_TAC[][]
-THEN `vs SUBSET FDOM((PROB with I:= state_succ_2 PROB.I h).I)` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_def_2, planning_problem_def]
+THEN `vs SUBSET FDOM((PROB with I:= state_succ_2 PROB.I h).I)` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_2_def, planning_problem_def]
 THEN Cases_on`as<>[]`
 THENL
 [
  	`∀as'.(as' ≠ [] ∧ as' ≼ as ⇒ FST (LAST as') ⊑ LAST (state_list (state_succ_2 PROB.I h, as')))` by METIS_TAC[Q.SPEC `h` (Q.SPEC `PROB.I` (Q.SPEC `as` graph_plan_lemma_1_1_1_2_1_1))]
-	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),as_proj(as,vs))` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_def_2, planning_problem_def]
+	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I h,vs),as_proj(as,vs))` by FULL_SIMP_TAC(srw_ss())[FDOM_state_succ, plan_2_def, planning_problem_def]
 	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I (action_proj(h,vs)),vs),as_proj(as,vs))` by 
 	     (SRW_TAC[][]
 	     THEN `(FST h) SUBMAP PROB.I` by METIS_TAC[graph_plan_lemma_1_1_1_2_4]
-	     THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_7, planning_problem_def, plan_def_2])
+	     THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_7, planning_problem_def, plan_2_def])
 	THEN Cases_on `(FDOM (DRESTRICT (SND h) vs) <> ∅)`
 	THENL
 	[
 		SRW_TAC[][graph_plan_lemma_1_1_1_3_3_9]
-		THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_8, plan_def_2, graph_plan_lemma_1_1_1_2_4]
+		THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_8, plan_2_def, graph_plan_lemma_1_1_1_2_4]
 		,
 		FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_3_3_10]
 		THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_11]
@@ -1597,8 +1597,8 @@ THENL
 	THEN `plan_2(prob_proj (PROB with I:=state_succ_2 PROB.I (action_proj(h,vs)),vs),[])` by 
 		(SRW_TAC[][]
 	     	THEN `(FST h) SUBMAP PROB.I` by METIS_TAC[graph_plan_lemma_1_1_1_2_4]
-	     	THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_7, planning_problem_def, plan_def_2])
-	THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_8, plan_def_2, graph_plan_lemma_1_1_1_2_4, graph_plan_lemma_1_1_1_3_3_11]
+	     	THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_7, planning_problem_def, plan_2_def])
+	THEN METIS_TAC[graph_plan_lemma_1_1_1_3_3_8, plan_2_def, graph_plan_lemma_1_1_1_2_4, graph_plan_lemma_1_1_1_3_3_11]
 ]);
 
 
@@ -1616,7 +1616,7 @@ val graph_plan_lemma_1_1_1_3 = store_thm("graph_plan_lemma_1_1_1_3",
 SRW_TAC[][]
 THEN `CARD (FDOM (prob_proj(PROB, vs)).I) = CARD(vs)` by METIS_TAC[graph_plan_lemma_1_1_1_3_1]
 THEN `plan_2(prob_proj (PROB,vs), as_proj(as, vs))` by FULL_SIMP_TAC(srw_ss())[graph_plan_lemma_1_1_1_3_3]
-THEN `planning_problem(prob_proj(PROB,vs))` by METIS_TAC[graph_plan_lemma_1_1_1_3_2, plan_def_2] 
+THEN `planning_problem(prob_proj(PROB,vs))` by METIS_TAC[graph_plan_lemma_1_1_1_3_2, plan_2_def] 
 THEN `LENGTH (as_proj(as, vs)) > 2 ** CARD (FDOM (prob_proj (PROB,vs)).I) ` by SRW_TAC[][]
 THEN METIS_TAC[lemma_2]);
 
@@ -1798,7 +1798,7 @@ THEN METIS_TAC[FDOM_state_succ, planning_problem_def]
 val graph_plan_lemma_1_1_1_8 = store_thm("graph_plan_lemma_1_1_1_8",
 ``! as PROB s. (planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 	   
 	  /\ (set as SUBSET PROB.A)) ==> plan_2((PROB with I:=s) with G:=exec_plan(s,as), as)``,
-SRW_TAC[][plan_def_2, planning_problem_def] 
+SRW_TAC[][plan_2_def, planning_problem_def] 
 THEN SRW_TAC[][]
 THEN METIS_TAC[graph_plan_lemma_1_1_1_8_1,planning_problem_def]
 );
@@ -2642,7 +2642,7 @@ val child_parent_lemma_2_1_1_** =  (" child_parent_lemma_2_1_1_**", (* previousl
   /\ sat_precond_as(PROB.I, as) 
  /\ (vs SUBSET FDOM(PROB.I)) /\ dep_var_set(PROB, (FDOM PROB.I) DIFF vs, vs  )  /\ ~dep_var_set(PROB, vs, (FDOM PROB.I) DIFF vs))
 ==> plan_2(prob_proj(PROB,vs), as_proj_child_parent(as, vs) )``,
-METIS_TAC[child_parent_lemma_1, plan_def_2, graph_plan_lemma_1_1_1_3_3_ , sat_precond_as_def]);
+METIS_TAC[child_parent_lemma_1, plan_2_def, graph_plan_lemma_1_1_1_3_3_ , sat_precond_as_def]);
 
 
 val child_parent_lemma_2_1_1 = store_thm("child_parent_lemma_2_1_1",
