@@ -12,7 +12,7 @@ val _ = Hol_datatype `problem = <|I:'a state;
       		     	          A:('a state# 'a state) set;
 				  G:'a state |>`
 val planning_problem_def = 
-    Define`planning_problem( PROB)  = (!a. a IN PROB.A ==> (FDOM(SND (a)) ⊆ FDOM(PROB.I))) /\ (FDOM PROB.G = FDOM PROB.I)`;
+    Define`planning_problem( PROB)  = (!a. a IN PROB.A ==> (FDOM(SND (a)) ⊆ FDOM(PROB.I)) /\ (FDOM(FST (a)) ⊆ FDOM(PROB.I)) )  /\ (FDOM PROB.G = FDOM PROB.I)`;
 
 val state_succ_def
  = Define`state_succ (s:'a state) a  =    if (FST a ⊑  s) then ( FUNION (SND a) s ) else s`;
@@ -93,7 +93,7 @@ val general_theorem = store_thm("general_theorem",
     METIS_TAC [DECIDE ``~(x:num <= y:num) <=> x > y``]
   ]);
 
-val general_theorem' = store_thm("general_theorem",
+val general_theorem' = store_thm("general_theorem'",
   ``!P f l prob. (!p. P( prob, p) /\ f p > l:num ==> ?p'. P( prob, p') /\ f p' < f p) ==>
     !p. P( prob, p) ==> ?p'. P( prob, p') /\ f p' <= l``,
   NTAC 5 STRIP_TAC THEN (* GEN_TAC THEN completeInduct_on `f p` THEN *)
