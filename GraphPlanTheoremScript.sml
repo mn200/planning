@@ -1301,7 +1301,7 @@ val child_parent_lemma_2_1_1 = store_thm("child_parent_lemma_2_1_1",
 	  /\ child_parent_rel(PROB, vs))
 	  ==>
 	  (?as'. (exec_plan(s, as') = exec_plan(s, as))
-	  /\ (LENGTH( FILTER (\a. varset_action(a, vs)) as')) <= (2**CARD(vs)))``,
+	  /\ (LENGTH( FILTER (\a. varset_action(a, vs)) as')) <= (2**CARD(vs)) /\ set as' SUBSET PROB.A)``,
 SRW_TAC[][]
 THEN `(∀p.
       (λas''. (exec_plan (s,as'') = exec_plan (s,as)) ∧ set as'' ⊆ PROB.A)  p ∧
@@ -1478,7 +1478,8 @@ val child_parent_lemma_2_1_2 = store_thm("child_parent_lemma_2_1_2",
 	  ==>
 	  (?as'. (exec_plan(s, as') = exec_plan(s, as))
 	  /\ (LENGTH as') <= (2**CARD(FDOM(PROB.I) DIFF vs))
-	  /\ EVERY  (\a. varset_action(a, FDOM(PROB.I) DIFF vs)) as')``,
+	  /\ EVERY  (\a. varset_action(a, FDOM(PROB.I) DIFF vs)) as'
+	  /\ set as' SUBSET PROB.A)``,
 SRW_TAC[][]
 THEN `(∀p.
       (λas''. (exec_plan (s,as'') = exec_plan (s,as)) ∧ set as'' ⊆ PROB.A /\ EVERY (\a. varset_action(a, FDOM(PROB.I) DIFF vs)) as'')  p ∧
@@ -1604,28 +1605,224 @@ val child_parent_lemma_2_1_3 = store_thm("child_parent_lemma_2_1_3",
 val remove_parent_cycles_def = Define `remove_parent_cycles(s, )`;
 
 
-fun cheat g = ACCEPT_TAC (mk_thm g) g
-val child_parent_lemma_2_1_4_1 = store_thm("child_parent_lemma_2_1_4_1",
-``!s P1 P2 P3 f: ('a # (('a  # 'a ) list)-> 'a) l k1 k2. P3(s, l)  /\ (!l s. P3(s, l) /\ EVERY P1 l ==> ?l'. (f(s, l') = f(s, l)) 
-      	      	       	     	       /\ (LENGTH l' <= k1) /\ (EVERY P1 l'))
-      		       /\ (!l s. P3(s, l) ==> ?l'. (f(s, l') = f(s, l)) 
-		       	      	 /\ LENGTH (FILTER P2 l') <= k2)
-		       /\ (!a. MEM a l ==> (P2 a <=> ~P1 a))
-		       /\ (!s l1 l2 la lb. (f(f(s, la), l1) = f(f(s, la), l2)) 
-		    	       	   ==> (f(s, (la ++ l1 ++ lb)) = f(s, (la ++ l2 ++ lb))))
-		       ==>
-			      ?l'. (f(s, l') = f(s, l)) /\ LENGTH (FILTER P2 l') < k2 
-			           /\ (!l''. (?pfx sfx. pfx ++ l'' ++ sfx = l') /\ EVERY P1 l''
-				      ==>
-					 LENGTH l'' < k1)``,
-cheat
-);
+val list_frag_def = Define `list_frag(l, frag) <=> ?pfx sfx. pfx ++ frag ++ sfx = l` ;
 
-val child_parent_lemma_2_1_4_2 = store_thm("child_parent_lemma_2_1_4_2",
-``!s as1 as2 asa asb. (exec_plan(exec_plan(s, asa), as1) = exec_plan(exec_plan(s, asa), as2) )
-      	       ==>(exec_plan(s, asa++as1++asb) = exec_plan(s, asa ++ as2 ++ asb))``,
-cheat
-);
+
+val list_frag_rec_def = 
+Define `(list_frag_rec(h::l, h'::l', h_orig :: l_original) =
+         if(h = h') then
+	      list_frag_rec(l, l', h_orig :: l_original)
+	 else if (h = h_orig) then 
+	      	 list_frag_rec(l, l_original, h_orig :: l_original)
+	      else 
+	      	 list_frag_rec(l, h_orig :: l_original, h_orig :: l_original)) /\
+
+	(list_frag_rec(l, [], l') = T) /\
+	(list_frag_rec([], h::l, l') = F) /\
+	(list_frag_rec(l, l', []) = T)` ;
+
+fun cheat g = ACCEPT_TAC (mk_thm g) g
+
+val child_parent_lemma_2_1_4_1_1_1_1_1 = store_thm("child_parent_lemma_2_1_4_1_1_1_1_1",
+``! la lb x l. ∀pfx' sfx. pfx' ++ l ++ sfx ≠ la ∧ pfx' ++ l ++ sfx ≠ lb /\ (?pfx sfx. (pfx ++ l ++ sfx = la ++ [x] ++ lb))
+      	       	     ==> MEM x l``,
+Induct_on `la`
+THEN Induct_on `lb`
+THEN Induct_on `l`
+THEN Induct_on `pfx'`
+THEN Induct_on `sfx`
+FULL_SIMP_TAC(srw_ss())[]
+
+MEM_APPEND
+MEM_SPLIT
+SRW_TAC[][]
+ASSUME_TAC(Q.SPEC `x` ( Q.SPEC `l` ( Q.GEN `l` ( Q.GEN `e`  MEM_SPLIT_APPEND_first))))
+MEM_SPLIT_APPEND_last
+
+val child_parent_lemma_2_1_4_1_1_1_1 = store_thm("child_parent_lemma_2_1_4_1_1_1_1",
+``!l la x lb P. list_frag(la ++ [x] ++ lb, l) /\ (~ MEM x l) 
+       ==>
+       	  list_frag(la, l) \/ list_frag(lb, l)``,
+SRW_TAC[][list_frag_def]
+THEN SRW_TAC[][GSYM EXISTS_OR_THM]
+THEN ASSUME_TAC(Q.SPEC `l` (Q.SPEC `x` MEM_SPLIT))
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN ASSUME_TAC( Q.SPEC `(l++sfx)` (GEN_ALL APPEND_EQ_APPEND_MID))
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN ASSUME_TAC( Q.SPEC `l` (Q.SPEC `sfx`(GEN_ALL APPEND_EQ_APPEND_MID)))
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN METIS_TAC[]);
+
+
+
+PROVE_TAC[(GEN_ALL APPEND_EQ_APPEND_MID), (GEN_ALL APPEND_EQ_APPEND)]
+
+
+
+val child_parent_lemma_2_1_4_1_1_1 = store_thm("child_parent_lemma_2_1_4_1_1_1",
+``!l la x lb P. list_frag(la ++ [x] ++ lb, l) /\ (~ P x) /\ EVERY P l
+       ==>
+       	  list_frag(la, l) \/ list_frag(lb, l)``,
+SRW_TAC[][]
+THEN Q_TAC SUFF_TAC `!l la x lb P. list_frag(la ++ [x] ++ lb, l) /\ (~ MEM x l) 
+       ==>
+       	  list_frag(la, l) \/ list_frag(lb, l)`
+THENL
+[
+	SRW_TAC[][]
+	THEN FULL_SIMP_TAC(srw_ss())[EVERY_MEM]
+	THEN `~MEM x l` by METIS_TAC[]
+	THEN METIS_TAC[]
+	,
+	METIS_TAC[child_parent_lemma_2_1_4_1_1_1_1]
+]);
+
+
+
+
+val child_parent_lemma_2_1_4_1_1_2 = store_thm("child_parent_lemma_2_1_4_1_1_2",
+``!l' l. list_frag(l, l') ==> LENGTH (l') <= LENGTH (l)``,
+SRW_TAC[][list_frag_def]
+THEN SRW_TAC[][]
+THEN DECIDE_TAC); 
+
+
+val child_parent_lemma_2_1_4_1_1 = store_thm("child_parent_lemma_2_1_4_1_1",
+``!Ch k1  Par f s l PProbs PProbl. PProbs(s) /\  PProbl(l)
+      	      	       /\ (!l s. PProbs(s) /\  PProbl(l) /\ EVERY Par l ==> ?l'. (f(s, l') = f(s, l)) 
+      	      	       	     	       /\ (LENGTH l' <= k1) /\ (EVERY Par l') /\ PProbl(l'))
+		       /\ (!a l. PProbl (l) /\ MEM a l ==> (Ch a <=> ~Par a))
+		       /\ (!s l1 l2. (f(f(s, l1), l2) = f(s, l1 ++ l2)))
+		       /\ (!l1 l2. PProbl(l1 ++ l2) <=> (PProbl(l1) /\ PProbl(l2)))
+		       /\ (!s l. PProbs(s) /\ PProbl(l) ==> PProbs(f(s, l)))
+		       ==>
+			      ?l'. (f(s, l') = f(s, l)) /\ (LENGTH (FILTER Ch l') = LENGTH (FILTER Ch l)) 
+			           /\ (!l''. list_frag (l', l'') /\ EVERY Par l''
+				      ==>
+					 LENGTH l'' <= k1)``,
+STRIP_TAC
+THEN Induct_on`FILTER Ch l`
+THEN SRW_TAC[][]
+THENL
+[
+	FULL_SIMP_TAC(srw_ss())[FILTER_EQ_NIL, list_frag_def]
+	THEN FULL_SIMP_TAC(srw_ss())[EVERY_MEM]
+	THEN `∀x. MEM x l ⇒ Par x` by METIS_TAC[] 
+	THEN FULL_SIMP_TAC(srw_ss()) [GSYM EVERY_MEM]
+	THEN FIRST_X_ASSUM (Q.SPECL_THEN [`l`, `s`] MP_TAC)
+	THEN SRW_TAC[][]
+	THEN Q.EXISTS_TAC `l''` 
+	THEN SRW_TAC[][]
+	THENL
+	[
+		FULL_SIMP_TAC(srw_ss())[EVERY_MEM]
+		THEN `∀e. MEM e l'' ⇒ ~Ch e` by METIS_TAC[]
+     		THEN  FULL_SIMP_TAC(srw_ss())[GSYM EVERY_MEM]
+     		THEN FULL_SIMP_TAC(srw_ss()) [(GSYM FILTER_EQ_NIL)]
+		,
+		FULL_SIMP_TAC(srw_ss())[LENGTH_APPEND]
+		THEN DECIDE_TAC
+	]
+	,
+	FULL_SIMP_TAC(srw_ss())[FILTER_EQ_CONS]
+	THEN FIRST_ASSUM (Q.SPECL_THEN  [`Ch`, `l2`] MP_TAC)
+	THEN SRW_TAC[][]
+	THEN FIRST_ASSUM (Q.SPECL_THEN  [`k1`, `Par`, `f`, `f(s, l1++[h])`] MP_TAC)
+	THEN SRW_TAC[][]
+	THEN `∃l'.
+		(f (f (s,l1 ++ [h]),l') = f (f (s,l1 ++ [h]),l2)) ∧
+        	(LENGTH (FILTER Ch l') = LENGTH (FILTER Ch l2)) ∧
+        	∀l''.
+			list_frag(l', l'') ∧ EVERY Par l'' ⇒
+          		LENGTH l'' ≤ k1` by (`PProbs (f (s,l1 ++ [h])) /\ PProbl(l2)` by FULL_SIMP_TAC(srw_ss())[Once (GSYM APPEND_ASSOC)]
+				    THEN FIRST_X_ASSUM  (Q.SPECL_THEN [`PProbs`, `PProbl`] MP_TAC) 
+				    THEN SRW_TAC[SatisfySimps.SATISFY_ss][])
+				    (* THEN FIRST_ASSUM MATCH_MP_TAC
+				    THEN METIS_TAC[] *)
+	THEN REWRITE_TAC[GSYM APPEND_ASSOC]
+	THEN REWRITE_TAC[FILTER_APPEND]
+	THEN SRW_TAC[][]
+	THEN `?l. (f(s, l) = f(s, l1)) /\ LENGTH(l) <= k1 /\ EVERY Par l /\ PProbl(l)` by 
+	     (FULL_SIMP_TAC(srw_ss())[]
+	     THEN `EVERY Par l1` by (FULL_SIMP_TAC(srw_ss())[FILTER_EQ_NIL] THEN FULL_SIMP_TAC(srw_ss())[EVERY_MEM] 
+	     THEN `∀x. MEM x l1 ⇒ Par x` by METIS_TAC[]) 
+	     THEN FIRST_ASSUM (Q.SPECL_THEN [`l1`, `s`]  MP_TAC)  
+	     THEN STRIP_TAC
+	     THEN FIRST_ASSUM MATCH_MP_TAC
+	     THEN SRW_TAC[][])
+	THEN Q.EXISTS_TAC `l ++ [h] ++ l'`
+	THEN SRW_TAC[][]
+	THENL
+	[
+		Q.PAT_ASSUM `∀s l1 l2. f (f (s,l1),l2) = f (s,l1 ++ l2)` (MP_TAC o GSYM) THEN STRIP_TAC
+		THEN REWRITE_TAC[GSYM APPEND_ASSOC]
+		THEN ASM_SIMP_TAC(bool_ss)[] 
+		THEN FULL_SIMP_TAC(srw_ss())[]
+		,
+		FULL_SIMP_TAC(srw_ss())[EVERY_MEM]
+		THEN `∀e. MEM e l ⇒ ~ Ch e` by METIS_TAC[]
+		THEN FULL_SIMP_TAC(srw_ss())[GSYM EVERY_MEM]
+		THEN FULL_SIMP_TAC(srw_ss())[GSYM FILTER_EQ_NIL]
+		THEN REWRITE_TAC[FILTER_APPEND]
+		THEN REWRITE_TAC[LENGTH_APPEND]
+		THEN SRW_TAC[][]
+		,	
+		Q.PAT_ASSUM `∀a l. PProbl l ∧ MEM a l ⇒ (Ch a ⇔ ¬Par a)` (MP_TAC o Q.SPEC `[h]` o Q.SPEC `h`)
+		THEN SRW_TAC[][] 
+		THEN MP_TAC((Q.SPEC `Par`
+		     (Q.SPEC `l'` 
+		     	     ( Q.SPEC `h` 
+			       ( Q.SPEC `l` (Q.SPEC `l''`child_parent_lemma_2_1_4_1_1_1))))))
+		THEN FULL_SIMP_TAC(srw_ss())[]
+		THEN SRW_TAC[][]		
+		THENL
+		[
+			MP_TAC (Q.SPEC`l` (Q.SPEC `l''`  child_parent_lemma_2_1_4_1_1_2))
+			THEN SRW_TAC[][]
+			THEN DECIDE_TAC 	
+			,
+			SRW_TAC[][]
+		]		
+	]
+]);  
+
+val child_parent_lemma_2_1_4_1 = store_thm("child_parent_lemma_2_1_4_1",
+``!k1 k2 s Par Ch  f l PProbs PProbl. PProbs(s) /\ PProbl(l) /\
+      	      	       (!l: 'a list s: 'b. PProbs(s) /\ PProbl(l) /\ EVERY Par l ==> ?l'. (f(s, l') = f(s, l)) 
+      	      	       	     	       /\ (LENGTH l' <= k1) /\ (EVERY Par l') /\ PProbl(l'))
+		       /\ (!l s. PProbs(s) /\ PProbl(l) ==>( ?l'. (f(s, l') = f(s, l)) 
+		       	      	 /\ LENGTH (FILTER Ch l') <= k2 /\ PProbl (l')))
+		       /\ (∀(a :α) l:'a list. PProbl (l) /\ MEM a l 
+		       	       ⇒ ((Ch :α -> bool) a ⇔ ¬(Par :α -> bool) a))
+		       /\ (!s l1 l2. (f(f(s, l1), l2) = f(s, l1 ++ l2)))
+		       /\ (!l1 l2. PProbl(l1 ++ l2) <=> (PProbl(l1) /\ PProbl(l2)))
+		       /\ (!s l. PProbs(s) /\ PProbl(l) ==> PProbs(f(s, l)))
+		       ==>
+			      ?l'. (f(s, l') = f(s, l)) /\ (LENGTH (FILTER Ch l') <= k2) 
+			           /\ (!l''. list_frag (l', l'') /\ EVERY Par l''
+				      ==>
+					 LENGTH l'' <= k1)``,
+SRW_TAC[][]
+THEN Q.PAT_ASSUM `∀l s. PProbs s ∧ PProbl l ==> (∃l'. (f (s,l') = f (s,l)) ∧ LENGTH (FILTER Ch l') ≤ k2 /\ PProbl(l'))`
+	    	(MP_TAC o Q.SPEC `s` o Q.SPEC `l`)
+THEN SRW_TAC[][]
+THEN MP_TAC
+(Q.SPEC `PProbl`
+   (Q.SPEC `PProbs`
+      (Q.SPEC `l'` 
+         (Q.SPEC `s` 
+            (Q.SPEC `f` 
+	        (Q.SPEC `Par` (Q.SPEC `k1` (Q.SPEC `Ch` child_parent_lemma_2_1_4_1_1))))))))
+THEN SRW_TAC[][]
+
+THEN `∃l''.
+        (f (s,l'') = f (s,l)) ∧
+        (LENGTH (FILTER Ch l'') = LENGTH (FILTER Ch l')) ∧
+        ∀l'''. list_frag (l'',l''') ∧ EVERY Par l''' ⇒ LENGTH l''' ≤ k1` by METIS_TAC[]
+THEN Q.EXISTS_TAC `l''`
+THEN SRW_TAC[][]);
+
+
 
 val child_parent_lemma_2_1_4_3 = store_thm("child_parent_lemma_2_1_4_3",
 ``!as. no_effectless_act(as) <=> EVERY (\a. FDOM (SND a) <> EMPTY) as``,
@@ -1634,141 +1831,71 @@ cheat
 
 
 
-val child_parent_lemma_2_1_4_1 = store_thm("child_parent_lemma_2_1_4_1",
-``!as PROB vs s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ set as ⊆ PROB.A ∧
-     FINITE vs ∧ child_parent_rel (PROB,vs)) ==>
-	?as'. (!as''.  (?as1 as2. as1 ++ as'' ++ as2 = as') 
-		/\ (!a''. MEM a'' as'' ==> (varset_action(a'', (FDOM PROB.I DIFF vs))))
-		    ==> (LENGTH as'' < ((2 ** CARD (FDOM PROB.I DIFF vs)) + 1))) /\ 
-		    (LENGTH (FILTER (λa. varset_action (a,vs)) as')  = LENGTH (FILTER (λa. varset_action (a,vs)) as))
-		    /\(exec_plan (s,as') = exec_plan (s,as))``,
-
-SPOSE_NOT_THEN STRIP_ASSUME_TAC THEN 
-FULL_SIMP_TAC(srw_ss())[AND_IMP_INTRO]
-
 val child_parent_lemma_2_1_4 = store_thm("child_parent_lemma_2_1_4",
-``!as PROB vs s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ set as ⊆ PROB.A ∧
+``!as PROB vs s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ PROB.A SUBSET (\a. FDOM (SND a) <> EMPTY)  /\ set as ⊆ PROB.A ∧
      FINITE vs ∧ child_parent_rel (PROB,vs)) ==>
-	?as'. (!as''.  (?as1 as2. as1 ++ as'' ++ as2 = as') 
+	?as'. (exec_plan (s,as') = exec_plan (s,as)) /\
+	      (LENGTH (FILTER (λa. varset_action (a,vs)) as') ≤ 2 ** CARD vs) /\
+	      (!as''.  list_frag(as', as'') 
 		/\ (!a''. MEM a'' as'' ==> (varset_action(a'', (FDOM PROB.I DIFF vs))))
-		    ==> (LENGTH as'' < ((2 ** CARD (FDOM PROB.I DIFF vs)) + 1))) /\ 
-		    (LENGTH (FILTER (λa. varset_action (a,vs)) as') ≤ 2 ** CARD vs) /\
-		     (exec_plan (s,as') = exec_plan (s,as))``,
-Induct_on `as`
-
-THEN SRW_TAC[][exec_plan_def]
-THEN Q.EXISTS_TAC `[]`
-THEN SRW_TAC[][exec_plan_def]
-THEN `0 < 2**(CARD (FDOM PROB.I) − CARD (FDOM PROB.I ∩ vs))` by SRW_TAC[][]
-THEN DECIDE_TAC
-
-
-
-THEN 
-SRW_TAC[][]
-ZERO_LESS_EXP
-
-val child_parent_lemma_2_1_4 = store_thm("child_parent_lemma_2_1_4",
-``!as PROB vs s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ set as ⊆ PROB.A ∧
-     FINITE vs ∧ child_parent_rel (PROB,vs)) ==>
-	?as'. (!as''.  (?as1 as2. as1 ++ as'' ++ as2 = as') 
-		/\ (!a''. MEM a'' as'' ==> (varset_action(a'', (FDOM PROB.I DIFF vs))))
-		    ==> (LENGTH as'' < ((2 ** CARD (FDOM PROB.I DIFF vs)) + 1))) /\ 
-		    (LENGTH (FILTER (λa. varset_action (a,vs)) as') ≤ 2 ** CARD vs) /\
-		     (exec_plan (s,as') = exec_plan (s,as))``,
+		    ==> (LENGTH as'' <= 2 ** CARD (FDOM PROB.I DIFF vs)))``,
 
 REPEAT STRIP_TAC
 THEN MP_TAC(Q.SPEC `as`( Q.ISPEC `PROB.A` graph_plan_lemma_16_4))
-THEN SRW_TAC[][]
+THEN STRIP_TAC
 THEN ASSUME_TAC(Q.SPEC `as`( Q.SPEC `s` graph_plan_lemma_16_1))
-
 THEN `!a:α state # α state. MEM a (rem_effectless_act(as)) ==>
      ((FDOM (SND a) ≠ ∅) /\  a IN PROB.A)` by METIS_TAC[REWRITE_RULE [EVERY_MEM](Q.SPEC `as` child_parent_lemma_2_1_4_3), graph_plan_lemma_16_6, 
      	       graph_plan_lemma_19 ]
 THEN MP_TAC (Q.GEN `a` (Q.SPEC ` vs` (Q.SPEC `a`  (Q.SPEC `PROB`(child_parent_lemma_1_1_2)))))
-THEN SRW_TAC[][]
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC
+THEN `!a l. set l SUBSET PROB.A /\ MEM a l ==> (varset_action (a,vs) ⇔ ¬varset_action (a,FDOM PROB.I DIFF vs))` by 
+     (Cases_on `l` THEN SRW_TAC[][no_effectless_act_def] THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF, SPECIFICATION])
 THEN `!a. MEM a (rem_effectless_act(as)) ==> (varset_action (a,vs) ⇔ ¬varset_action (a,FDOM PROB.I DIFF vs))` by METIS_TAC[]
-
 THEN MP_TAC (REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.GEN `l` (Q.GEN `s` (Q.SPEC `s` (Q.SPEC `l ` (Q.SPEC `vs` (Q.SPEC `PROB` child_parent_lemma_2_1_1)))))))
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC
+THEN MP_TAC ((Q.GEN `l` (Q.GEN `s` (Q.SPEC `s` ( Q.SPEC `l` ( Q.SPEC `vs` (Q.SPEC `PROB` child_parent_lemma_2_1_2)))))))
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC
+THEN MP_TAC (GSYM exec_plan_Append)
+THEN STRIP_TAC
+THEN MP_TAC (child_parent_lemma_2_1_4_1
+	     |> INST_TYPE [alpha |->  ``:'a state # 'a state``]
+	     |> INST_TYPE [beta |-> ``:'a state``]
+	     |> Q.SPEC `2 ** CARD (FDOM (PROB) .I DIFF (vs:α -> bool))`
+	     |> Q.SPEC `2 ** CARD (vs:α -> bool)`
+      	     |> Q.SPEC `s`
+             |> Q.ISPEC `(\a. varset_action(a, FDOM((PROB).I) DIFF (vs:α -> bool)))` 
+             |> Q.SPEC `(\a. varset_action(a, (vs:α -> bool)))` 
+             |> Q.SPEC `(\x. exec_plan x )` 
+             |> Q.SPEC `rem_effectless_act(as)` 
+             |> Q.SPEC `(\s. FDOM(s) = FDOM((PROB).I))` 
+             |> Q.SPEC `(\as. set as SUBSET (PROB).A )`)
+THEN `!a b c. (a ==> c) ==> ((a /\ b ==> c) = T)` by SRW_TAC[][]
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC
 THEN SRW_TAC[][]
-THEN MP_TAC (REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.GEN `l` (Q.SPEC `s` ( Q.SPEC `l` ( Q.SPEC `vs` (Q.SPEC `PROB` child_parent_lemma_2_1_2))))))
+
 THEN SRW_TAC[][]
-THEN MP_TAC (Q.SPEC `s` child_parent_lemma_2_1_4_2)
-THEN SRW_TAC[][]
-
-
-THEN MP_TAC(REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.SPEC `2 ** CARD vs` (Q.SPEC `2 ** CARD (FDOM PROB.I DIFF vs)` (Q.SPEC `rem_effectless_act(as)` (Q.SPEC `(\x. exec_plan x )` ( Q.ISPEC `(\as. set as SUBSET PROB.A)` ( Q.ISPEC `(\a. varset_action(a, vs))` (Q.ISPEC `(\a. varset_action(a, FDOM(PROB.I) DIFF vs))` (Q.SPEC `s` child_parent_lemma_2_1_4_1)))))))))
-THEN SRW_TAC[][]
-
-
-FIRST_X_ASSUM (HO_MATCH_THEN  ```` MP_TAC)
-
-FIRST_X_ASSUM (Q.SPECL [`l`])
-
-THEN MP_TAC (MP  (REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.GEN `l` (Q.SPEC `s` ( Q.SPEC `l` ( Q.SPEC `vs` (Q.SPEC `PROB` child_parent_lemma_2_1_2))))))
-     	    	 (REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.SPEC `2 ** CARD vs` (Q.SPEC `2 ** CARD (FDOM PROB.I DIFF vs)` (Q.SPEC `as` (Q.ISPEC `(\as''. exec_plan(s, as'') )` ( Q.ISPEC `(\as. set as SUBSET PROB.A)` ( Q.ISPEC `(\a. varset_action(a, vs))` (Q.ISPEC `(\a. varset_action(a, FDOM(PROB.I) DIFF vs))` child_parent_lemma_2_1_4_1)))))))))
-
-
-
-
-THEN REWRITE_TAC[  (AND_IMP_INTRO)]
-THEN REWRITE_TAC[GSYM CONJ_ASSOC]
-THEN ASM_SIMP_TAC(srw_ss())[]
-THEN SRW_TAC[][]
-THEN FULL_SIMP_TAC(srw_ss())[]
-
-
-
-
-
-SRW_TAC[][]
-FULL_SIMP_TAC(srw_ss())[]
-child_parent_lemma_2_1_2
-METIS SRW_TAC[][child_parent_lemma_2_1_4_2, child_parent_lemma_2_1_1, child_parent_lemma_2_1_2]
-
-REPEAT STRIP_TAC
-`FINITE (FDOM(PROB.I))` by SRW_TAC[][]
-SRW_TAC[][Once (GSYM CARD_DIFF)]
-METIS_TAC
-FULL_SIMP_TAC(srw_ss())METIS_TAC[child_parent_lemma_2_1_1, child_parent_lemma_2_1_2, child_parent_lemma_1_1_2]
-
-SRW_TAC[][]
-
-EPEAT STRIP_TAC
-THEN MP_TAC (Q.SPEC`s`( Q.SPEC `as` (Q.SPEC `vs`( Q.SPEC `PROB` child_parent_lemma_2_1_1))))
-THEN SRW_TAC[][]
-THEN Cases_on `(∀as''. 
-     (∃as1 as2. as1 ++ as'' ++ as2 = as') ∧
-     (∀a''. MEM a'' as'' ⇒ varset_action (a'',FDOM PROB.I DIFF vs)) ⇒
-     LENGTH as'' <
-     2 ** (CARD (FDOM PROB.I) − CARD (FDOM PROB.I ∩ vs)) + 1)`
-THEN METIS_TAC[]
 
 THEN FULL_SIMP_TAC(srw_ss())[]
-THEN EXISTS_TAC
-SRW_TAC[][Once CARD_DIFF, Once (GSYM CARD_DIFF)]
-eTHEN 
-THEN FULL_SIMP_TAC(srw_ss())[GSYM EVERY_MEM]
-THEN MP_TAC (Q.SPEC ` `child_parent_lemma_2_1_2)
+THEN `∃l'.
+         (exec_plan (s,l') = exec_plan (s,rem_effectless_act as)) ∧
+         LENGTH (FILTER (λa:(α state # α state). varset_action (a,vs:α -> bool)) l') ≤ 2 ** CARD vs ∧
+         ∀l''.
+           list_frag (l',l'') ∧
+           EVERY (λa. varset_action (a,FDOM PROB.I DIFF vs)) l'' ⇒
+           LENGTH l'' ≤ 2 ** CARD (FDOM PROB.I DIFF vs)` by REWRITE_TAC[] FIRST_ASSUM MATCH_MP_TAC
+
+THEN FIRST_ASSUM MATCH_MP_TAC
+THEN FULL_SIMP_TAC(srw_ss())[GSYM CARD_DIFF]
+THEN Q.EXISTS_TAC `l'`
 THEN SRW_TAC[][]
-val child_parent_lemma_2_1 = store_thm("child_parent_lemma_2_1",
-``!PROB vs as s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ set as ⊆ PROB.A ∧
-     FINITE vs ∧ child_parent_rel (PROB,vs))      
-     ==>
-     ∃as'.
-       (exec_plan (s,as') = exec_plan (s,as)) ∧
-       LENGTH as' < 2 ** CARD (FDOM PROB.I DIFF vs) * 2 ** CARD (vs)``,
-
-SRW_TAC[][]
-
-Q_TAC SUFF_TAC `!P1 P2 l k1 k2.
-      (∀x. MEM x l ⇒ (~P1 x <=> P2 x)) ∧ LENGTH (FILTER P1 l) < k1 ∧
-      (∀l'. (?pfx sfx. pfx ++ l' ++ sfx = l) /\ (∀x. MEM x l' ⇒ P2 x) ⇒ LENGTH l' < k2)
-     ==>
-      LENGTH l < k1 * k2`
-SRW_TAC[][]
-
-);
+THEN FIRST_X_ASSUM (Q.SPECL_THEN  [`as''`] MP_TAC)
+THEN FULL_SIMP_TAC(bool_ss)[GSYM EVERY_MEM]
+THEN METIS_TAC[GSYM CARD_DIFF]);
 
 
 
