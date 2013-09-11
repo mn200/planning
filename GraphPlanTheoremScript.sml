@@ -1,14 +1,13 @@
 open HolKernel Parse boolLib bossLib;
-val _ = new_theory "GraphPlanTheorem";
-open HolKernel Parse boolLib bossLib;
+
 open finite_mapTheory
 open arithmeticTheory
 open pred_setTheory
 open FM_planTheory
 open rich_listTheory
 open listTheory;							 
-
-
+open utilsTheory;
+val _ = new_theory "GraphPlanTheorem";
 val dep_def = Define`dep(PROB, v1, v2) <=>  (?a. (a IN PROB.A) /\ (((v1 IN (FDOM (FST a))) /\ (v2 IN (FDOM (SND a))) ) \/ ((v1 IN (FDOM (SND a))) /\ (v2 IN (FDOM (SND a))) )) ) `;
 
 
@@ -1602,8 +1601,6 @@ val child_parent_lemma_2_1_3 = store_thm("child_parent_lemma_2_1_3",
      LENGTH(l) < k1 * k2``
 ); *)
 
-val remove_parent_cycles_def = Define `remove_parent_cycles(s, )`;
-
 
 val list_frag_def = Define `list_frag(l, frag) <=> ?pfx sfx. pfx ++ frag ++ sfx = l` ;
 
@@ -1623,22 +1620,6 @@ Define `(list_frag_rec(h::l, h'::l', h_orig :: l_original) =
 
 fun cheat g = ACCEPT_TAC (mk_thm g) g
 
-val child_parent_lemma_2_1_4_1_1_1_1_1 = store_thm("child_parent_lemma_2_1_4_1_1_1_1_1",
-``! la lb x l. ∀pfx' sfx. pfx' ++ l ++ sfx ≠ la ∧ pfx' ++ l ++ sfx ≠ lb /\ (?pfx sfx. (pfx ++ l ++ sfx = la ++ [x] ++ lb))
-      	       	     ==> MEM x l``,
-Induct_on `la`
-THEN Induct_on `lb`
-THEN Induct_on `l`
-THEN Induct_on `pfx'`
-THEN Induct_on `sfx`
-FULL_SIMP_TAC(srw_ss())[]
-
-MEM_APPEND
-MEM_SPLIT
-SRW_TAC[][]
-ASSUME_TAC(Q.SPEC `x` ( Q.SPEC `l` ( Q.GEN `l` ( Q.GEN `e`  MEM_SPLIT_APPEND_first))))
-MEM_SPLIT_APPEND_last
-
 val child_parent_lemma_2_1_4_1_1_1_1 = store_thm("child_parent_lemma_2_1_4_1_1_1_1",
 ``!l la x lb P. list_frag(la ++ [x] ++ lb, l) /\ (~ MEM x l) 
        ==>
@@ -1654,8 +1635,6 @@ THEN FULL_SIMP_TAC(srw_ss())[]
 THEN METIS_TAC[]);
 
 
-
-PROVE_TAC[(GEN_ALL APPEND_EQ_APPEND_MID), (GEN_ALL APPEND_EQ_APPEND)]
 
 
 
@@ -1699,7 +1678,7 @@ val child_parent_lemma_2_1_4_1_1 = store_thm("child_parent_lemma_2_1_4_1_1",
 			      ?l'. (f(s, l') = f(s, l)) /\ (LENGTH (FILTER Ch l') = LENGTH (FILTER Ch l)) 
 			           /\ (!l''. list_frag (l', l'') /\ EVERY Par l''
 				      ==>
-					 LENGTH l'' <= k1)``,
+					 LENGTH l'' <= k1) /\ PProbl(l')``,
 STRIP_TAC
 THEN Induct_on`FILTER Ch l`
 THEN SRW_TAC[][]
@@ -1731,13 +1710,16 @@ THENL
 	THEN SRW_TAC[][]
 	THEN `∃l'.
 		(f (f (s,l1 ++ [h]),l') = f (f (s,l1 ++ [h]),l2)) ∧
-        	(LENGTH (FILTER Ch l') = LENGTH (FILTER Ch l2)) ∧
+        	(LENGTH (FILTER Ch l') = LENGTH (FILTER Ch l2)) ∧ PProbl(l') /\
         	∀l''.
 			list_frag(l', l'') ∧ EVERY Par l'' ⇒
           		LENGTH l'' ≤ k1` by (`PProbs (f (s,l1 ++ [h])) /\ PProbl(l2)` by FULL_SIMP_TAC(srw_ss())[Once (GSYM APPEND_ASSOC)]
 				    THEN FIRST_X_ASSUM  (Q.SPECL_THEN [`PProbs`, `PProbl`] MP_TAC) 
+				    THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+				    THEN Q.EXISTS_TAC `l'` 
 				    THEN SRW_TAC[SatisfySimps.SATISFY_ss][])
-				    (* THEN FIRST_ASSUM MATCH_MP_TAC
+				    (* THEN FULL_SIMP_TAC(srw_ss())[]METIS_TAC[]
+				     THEN FIRST_ASSUM MATCH_MP_TAC
 				    THEN METIS_TAC[] *)
 	THEN REWRITE_TAC[GSYM APPEND_ASSOC]
 	THEN REWRITE_TAC[FILTER_APPEND]
@@ -1779,10 +1761,12 @@ THENL
 		[
 			MP_TAC (Q.SPEC`l` (Q.SPEC `l''`  child_parent_lemma_2_1_4_1_1_2))
 			THEN SRW_TAC[][]
-			THEN DECIDE_TAC 	
+			THEN DECIDE_TAC 				
 			,
 			SRW_TAC[][]
-		]		
+		]
+		,
+		FULL_SIMP_TAC(bool_ss)[]		
 	]
 ]);  
 
@@ -1801,7 +1785,7 @@ val child_parent_lemma_2_1_4_1 = store_thm("child_parent_lemma_2_1_4_1",
 			      ?l'. (f(s, l') = f(s, l)) /\ (LENGTH (FILTER Ch l') <= k2) 
 			           /\ (!l''. list_frag (l', l'') /\ EVERY Par l''
 				      ==>
-					 LENGTH l'' <= k1)``,
+					 LENGTH l'' <= k1) /\ PProbl(l')``,
 SRW_TAC[][]
 THEN Q.PAT_ASSUM `∀l s. PProbs s ∧ PProbl l ==> (∃l'. (f (s,l') = f (s,l)) ∧ LENGTH (FILTER Ch l') ≤ k2 /\ PProbl(l'))`
 	    	(MP_TAC o Q.SPEC `s` o Q.SPEC `l`)
@@ -1818,41 +1802,30 @@ THEN SRW_TAC[][]
 THEN `∃l''.
         (f (s,l'') = f (s,l)) ∧
         (LENGTH (FILTER Ch l'') = LENGTH (FILTER Ch l')) ∧
-        ∀l'''. list_frag (l'',l''') ∧ EVERY Par l''' ⇒ LENGTH l''' ≤ k1` by METIS_TAC[]
+        (∀l'''. list_frag (l'',l''') ∧ EVERY Par l''' ⇒ LENGTH l''' ≤ k1)
+	/\ PProbl(l'')` by METIS_TAC[]
 THEN Q.EXISTS_TAC `l''`
 THEN SRW_TAC[][]);
 
 
 
-val child_parent_lemma_2_1_4_3 = store_thm("child_parent_lemma_2_1_4_3",
-``!as. no_effectless_act(as) <=> EVERY (\a. FDOM (SND a) <> EMPTY) as``,
-cheat
-);
-
-
-
-val child_parent_lemma_2_1_4 = store_thm("child_parent_lemma_2_1_4",
+val child_parent_lemma_2_1_3 = store_thm("child_parent_lemma_2_1_3",
 ``!as PROB vs s. (planning_problem PROB ∧ (FDOM s = FDOM PROB.I) ∧ PROB.A SUBSET (\a. FDOM (SND a) <> EMPTY)  /\ set as ⊆ PROB.A ∧
      FINITE vs ∧ child_parent_rel (PROB,vs)) ==>
-	?as'. (exec_plan (s,as') = exec_plan (s,as)) /\
+	?as'. (exec_plan (s,as') = exec_plan (s,as)) /\ 
 	      (LENGTH (FILTER (λa. varset_action (a,vs)) as') ≤ 2 ** CARD vs) /\
-	      (!as''.  list_frag(as', as'') 
+	      (!as''.  (list_frag(as', as'') 
 		/\ (!a''. MEM a'' as'' ==> (varset_action(a'', (FDOM PROB.I DIFF vs))))
-		    ==> (LENGTH as'' <= 2 ** CARD (FDOM PROB.I DIFF vs)))``,
-
+		    ==> (LENGTH as'' <= 2 ** CARD (FDOM PROB.I DIFF vs)))) /\ set as' ⊆ PROB.A``,
 REPEAT STRIP_TAC
 THEN MP_TAC(Q.SPEC `as`( Q.ISPEC `PROB.A` graph_plan_lemma_16_4))
 THEN STRIP_TAC
 THEN ASSUME_TAC(Q.SPEC `as`( Q.SPEC `s` graph_plan_lemma_16_1))
-THEN `!a:α state # α state. MEM a (rem_effectless_act(as)) ==>
-     ((FDOM (SND a) ≠ ∅) /\  a IN PROB.A)` by METIS_TAC[REWRITE_RULE [EVERY_MEM](Q.SPEC `as` child_parent_lemma_2_1_4_3), graph_plan_lemma_16_6, 
-     	       graph_plan_lemma_19 ]
 THEN MP_TAC (Q.GEN `a` (Q.SPEC ` vs` (Q.SPEC `a`  (Q.SPEC `PROB`(child_parent_lemma_1_1_2)))))
 THEN FULL_SIMP_TAC(bool_ss)[]
 THEN STRIP_TAC
 THEN `!a l. set l SUBSET PROB.A /\ MEM a l ==> (varset_action (a,vs) ⇔ ¬varset_action (a,FDOM PROB.I DIFF vs))` by 
      (Cases_on `l` THEN SRW_TAC[][no_effectless_act_def] THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF, SPECIFICATION])
-THEN `!a. MEM a (rem_effectless_act(as)) ==> (varset_action (a,vs) ⇔ ¬varset_action (a,FDOM PROB.I DIFF vs))` by METIS_TAC[]
 THEN MP_TAC (REWRITE_RULE [GSYM AND_IMP_INTRO] (Q.GEN `l` (Q.GEN `s` (Q.SPEC `s` (Q.SPEC `l ` (Q.SPEC `vs` (Q.SPEC `PROB` child_parent_lemma_2_1_1)))))))
 THEN FULL_SIMP_TAC(bool_ss)[]
 THEN STRIP_TAC
@@ -1861,6 +1834,14 @@ THEN FULL_SIMP_TAC(bool_ss)[]
 THEN STRIP_TAC
 THEN MP_TAC (GSYM exec_plan_Append)
 THEN STRIP_TAC
+THEN MP_TAC (graph_plan_lemma_6_1 
+             |> Q.SPEC `as`
+	     |> Q.SPEC `s`
+	     |> Q.SPEC `PROB`
+	     |> Q.GEN `s`
+	     |> Q.GEN `as`)
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC 
 THEN MP_TAC (child_parent_lemma_2_1_4_1
 	     |> INST_TYPE [alpha |->  ``:'a state # 'a state``]
 	     |> INST_TYPE [beta |-> ``:'a state``]
@@ -1873,32 +1854,33 @@ THEN MP_TAC (child_parent_lemma_2_1_4_1
              |> Q.SPEC `rem_effectless_act(as)` 
              |> Q.SPEC `(\s. FDOM(s) = FDOM((PROB).I))` 
              |> Q.SPEC `(\as. set as SUBSET (PROB).A )`)
-THEN `!a b c. (a ==> c) ==> ((a /\ b ==> c) = T)` by SRW_TAC[][]
 THEN FULL_SIMP_TAC(bool_ss)[]
 THEN STRIP_TAC
-THEN SRW_TAC[][]
-
-THEN SRW_TAC[][]
-
-THEN FULL_SIMP_TAC(srw_ss())[]
-THEN `∃l'.
-         (exec_plan (s,l') = exec_plan (s,rem_effectless_act as)) ∧
-         LENGTH (FILTER (λa:(α state # α state). varset_action (a,vs:α -> bool)) l') ≤ 2 ** CARD vs ∧
-         ∀l''.
-           list_frag (l',l'') ∧
-           EVERY (λa. varset_action (a,FDOM PROB.I DIFF vs)) l'' ⇒
-           LENGTH l'' ≤ 2 ** CARD (FDOM PROB.I DIFF vs)` by REWRITE_TAC[] FIRST_ASSUM MATCH_MP_TAC
-
+THEN FULL_SIMP_TAC(bool_ss)[EVERY_MEM]
 THEN FIRST_ASSUM MATCH_MP_TAC
-THEN FULL_SIMP_TAC(srw_ss())[GSYM CARD_DIFF]
-THEN Q.EXISTS_TAC `l'`
-THEN SRW_TAC[][]
-THEN FIRST_X_ASSUM (Q.SPECL_THEN  [`as''`] MP_TAC)
-THEN FULL_SIMP_TAC(bool_ss)[GSYM EVERY_MEM]
-THEN METIS_TAC[GSYM CARD_DIFF]);
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]);
 
 
+val child_parent_lemma_2_1 = store_thm("child_parent_lemma_2_1",
+``!PROB as vs. plan(PROB, as) /\ PROB.A ⊆ (λa. FDOM (SND a) ≠ ∅) /\ child_parent_rel(PROB, vs) /\ FINITE vs
+	==> ?as'. plan(PROB, as') /\ LENGTH(as') < ((2 ** CARD vs + 1) * (2 ** CARD (FDOM(PROB.I) DIFF  vs) + 1))``,
+REWRITE_TAC[plan_def]
+THEN REPEAT STRIP_TAC
+THEN MP_TAC (child_parent_lemma_2_1_3
+			|> Q.SPEC `as`
+			|> Q.SPEC `PROB`
+			|> Q.SPEC `vs`
+			|> Q.SPEC `PROB.I`)
+THEN FULL_SIMP_TAC(bool_ss)[]
+THEN STRIP_TAC
+THEN Q.EXISTS_TAC `as'`
 
+THEN FULL_SIMP_TAC(bool_ss)[]
+MATCH_MP_TAC REWRITE_RULE[GSYM list_frag_def, GSYM EVERY_MEM] twosorted_list_length
+child_parent_lemma_2_1_3
+
+
+twosorted_list_length
 val _ = export_theory();
 
 
