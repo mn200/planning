@@ -9,7 +9,7 @@ val sublist_def = Define`
   (sublist (h::t) [] = F) /\
   (sublist (x::l1) (y::l2) = (x = y) /\ sublist l1 l2 \/ sublist (x::l1) l2)`;
 
-val _  = overload_on ("<=", ``sublist``)
+(* val _  = overload_on ("<=", ``sublist``) *)
 
 (* This is to make the sublist theory usable by SRW_TAC *)
 val _ = export_rewrites ["sublist_def"];
@@ -21,13 +21,13 @@ val cons_front_lemma = prove(
 
 val sublist_NIL = store_thm(
   "sublist_NIL",
-  ``(l1:'a list) <= [] <=> (l1 = [])``,
+  ``subliust (l1:'a list) [] <=> (l1 = [])``,
   Cases_on `l1` THEN SRW_TAC [][]); 
 val _ = export_rewrites ["sublist_NIL"]
 
 val sublist_trans = store_thm(
   "sublist_trans",
-  ``!l1 l2 l3:'a list. l1 <= l2 /\ l2 <= l3 ==> l1 <= l3``,
+  ``!l1 l2 l3:'a list. sublist l1  l2 /\ sublist l2 l3 ==> sublist l1 l3``,
   Induct_on `l3` THEN SIMP_TAC (srw_ss()) [] THEN 
   Cases_on `l1` THEN SRW_TAC [][] THEN
   Cases_on `l2` THEN FULL_SIMP_TAC (srw_ss()) [] THEN 

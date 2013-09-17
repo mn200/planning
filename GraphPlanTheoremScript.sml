@@ -7,6 +7,7 @@ open FM_planTheory
 open rich_listTheory
 open listTheory;							 
 open utilsTheory;
+open fooTheory;
 val _ = new_theory "GraphPlanTheorem";
 val dep_def = Define`dep(PROB, v1, v2) <=>  (?a. (a IN PROB.A) /\ (((v1 IN (FDOM (FST a))) /\ (v2 IN (FDOM (SND a))) ) \/ ((v1 IN (FDOM (SND a))) /\ (v2 IN (FDOM (SND a))) )) ) `;
 
@@ -1876,11 +1877,214 @@ THEN STRIP_TAC
 THEN Q.EXISTS_TAC `as'`
 
 THEN FULL_SIMP_TAC(bool_ss)[]
-MATCH_MP_TAC REWRITE_RULE[GSYM list_frag_def, GSYM EVERY_MEM] twosorted_list_length
-child_parent_lemma_2_1_3
+THEN `LENGTH (FILTER (λa. varset_action (a,vs)) as') < (2 ** CARD vs + 1 )` by DECIDE_TAC
+THEN `∀as''.
+        list_frag (as',as'') ∧
+        (∀a''. MEM a'' as'' ⇒ varset_action (a'',FDOM PROB.I DIFF vs)) ⇒
+        LENGTH as'' < (2 ** CARD (FDOM PROB.I DIFF vs)  + 1)` by  METIS_TAC[LESS_EQ_IMP_LESS_SUC, SUC_ONE_ADD, ADD_SYM] 
+THEN MATCH_MP_TAC (REWRITE_RULE[GSYM list_frag_def, GSYM EVERY_MEM] twosorted_list_length)
+THEN Q.EXISTS_TAC `(λa. varset_action (a,vs))`
+THEN Q.EXISTS_TAC `(λa. varset_action (a,FDOM(PROB.I) DIFF vs))`
+THEN STRIP_TAC
+THENL
+[
+	
+	Cases_on `as'`
+	THEN SRW_TAC[][]
+	THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF]
+	THEN METIS_TAC[child_parent_lemma_1_1_2]
+	,
+	FULL_SIMP_TAC(bool_ss)[GSYM EVERY_MEM]
+]);
+
+val PLS_def = Define `PLS:(('a problem # 'a state # (('a state # 'a state) list)) -> (num->bool))(PROB, s, as) =
+    (IMAGE LENGTH {as':(α state # α state) list |(exec_plan(s, as') = exec_plan(s, as)) /\ set as' SUBSET PROB.A} )`
 
 
-twosorted_list_length
+val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
+    =  (IMAGE (\ (s, as). MIN_SET (PLS(PROB, s, as))) 
+       	      {(s, as) |  (FDOM (s) = FDOM(PROB.I)) /\ (set as SUBSET PROB.A)})`;
+
+(* val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
+    =   {MIN_SET(IMAGE LENGTH PLS(PROB, s1, s2)) |  (FDOM (s1) = FDOM(PROB.I)) /\ (FDOM (s2) = FDOM(PROB.I))}`; *)
+
+
+val problem_plan_bound_def = Define `problem_plan_bound(PROB: 'a problem)
+= MAX_SET(MPLS(PROB))` ;
+
+
+
+
+val bound_main_lemma_1_1 = store_thm("bound_main_lemma_1_1",
+``!PROB s as. planning_problem(PROB) /\ (FDOM(s) = FDOM(PROB.I)) /\ set as SUBSET PROB.A
+	==>
+	?x. x IN PLS(PROB, s, as) /\ x <= 2 ** CARD(FDOM(PROB.I))``,
+SRW_TAC[][PLS_def]
+THEN MP_TAC (graph_plan_lemma_6
+		|> Q.SPEC `as`
+		|> Q.SPEC `PROB`
+		|> Q.SPEC `s`)
+THEN SRW_TAC[][]
+THEN MP_TAC (main_lemma
+		  |> Q.SPEC `PROB with <|I := s; G := exec_plan (s,as)|>`
+		  |> Q.SPEC `as`)
+THEN SRW_TAC[][]
+THEN Q.EXISTS_TAC `LENGTH as'`
+THEN SRW_TAC[][]
+THEN Q.EXISTS_TAC `as'`
+THEN FULL_SIMP_TAC(srw_ss())[plan_def]
+);
+
+val bound_main_lemma_1_2 = store_thm("bound_main_lemma_1_2",
+``!s: ( num -> bool) k: num. (?x. x IN s /\ x <= k) ==> MIN_SET(s) <= k``,
+
+SRW_TAC[][]
+THEN  ASSUME_TAC ((MATCH_MP (AND1_THM) (REWRITE_RULE[EQ_IMP_THM](MEMBER_NOT_EMPTY
+		       |> Q.SPEC `s`))) |> INST_TYPE [alpha |-> ``:num``])
+THEN `s <> EMPTY` by (FIRST_ASSUM MATCH_MP_TAC THEN Q.EXISTS_TAC `x` THEN SRW_TAC[][])
+THEN MP_TAC (MIN_SET_LEM
+	    |> Q.SPEC `s`)
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+THEN Q.PAT_ASSUM `∀x. x ∈ s ⇒ MIN_SET s ≤ x` (MP_TAC o Q.SPEC `x`)
+THEN SRW_TAC[][]
+THEN DECIDE_TAC
+);
+
+
+val bound_main_lemma_1 = store_thm("bound_main_lemma_1",
+``!PROB x. planning_problem(PROB) ==>  (x IN MPLS(PROB)) ==> x <= 2 ** CARD(FDOM(PROB.I)) ``,
+SRW_TAC[][MPLS_def]
+THEN MP_TAC (bound_main_lemma_1_1
+		|> Q.SPEC `PROB`
+		|> Q.SPEC `s`
+		|> Q.SPEC `as`)
+THEN SRW_TAC[][]
+THEN MP_TAC(bound_main_lemma_1_2
+			|> Q.SPEC `PLS (PROB,s,as)`
+			|> Q.SPEC `2 ** CARD (FDOM PROB.I)`)
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]);
+
+
+val bound_main_lemma_2_1 = store_thm("bound_main_lemma_2_1",
+``!s:num k. (!x. x IN s ==> x <= k) ==> FINITE s``,
+SRW_TAC[][]
+THEN `∀x. x ∈ s ⇒ x < k + 1` by (SRW_TAC[][] THEN Q.PAT_ASSUM `∀x. x ∈ s ⇒ x ≤ k` (MP_TAC o Q.SPEC `x`) THEN SRW_TAC[][] THEN DECIDE_TAC)
+THEN Q.PAT_ASSUM  `∀x. x ∈ s ⇒ x < k + 1` (MP_TAC o 
+     		       	       	       	  	  REWRITE_RULE [Once ((GSYM COUNT_applied) |> Q.SPEC `m` |> Q.SPEC `k + 1` |> Q.GEN `m`)])
+THEN STRIP_TAC 
+THEN MP_TAC (MATCH_MP (AND1_THM) (REWRITE_RULE[EQ_IMP_THM] ((GSYM SUBSET_DEF) 
+     	   	  |> Q.SPEC `s`
+		  |> Q.ISPEC `(count (k + 1))`) ))
+THEN FULL_SIMP_TAC(srw_ss())[GSYM IN_DEF]
+THEN STRIP_TAC
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][FINITE_COUNT, SUBSET_FINITE]);
+
+
+val bound_main_lemma_2 = store_thm("bound_main_lemma_2",
+``!s k.  (s <> EMPTY) /\ (!x. x IN s ==> x <= k) ==> MAX_SET(s) <= k ``,
+SRW_TAC[][]
+THEN MP_TAC (bound_main_lemma_2_1
+			|> Q.SPEC `s`
+			|> Q.SPEC `k`)
+THEN SRW_TAC[][]
+THEN MP_TAC (MAX_SET_DEF
+		     |> Q.SPEC `s`)
+THEN SRW_TAC[][]
+);
+
+
+
+val bound_main_lemma = store_thm("bound_main_lemma",
+``!PROB. planning_problem(PROB) ==> (problem_plan_bound(PROB) <= 2**(CARD (FDOM(PROB.I))))``,
+SRW_TAC[][problem_plan_bound_def]
+THEN MP_TAC (bound_main_lemma_1
+		|> Q.SPEC `PROB`)
+THEN SRW_TAC[][]
+THEN MP_TAC (bound_main_lemma_2
+		|> Q.SPEC `MPLS PROB`
+		|> Q.SPEC `2**(CARD (FDOM(PROB.I)))`)
+THEN SRW_TAC[][]
+THEN FIRST_ASSUM MATCH_MP_TAC
+THEN SRW_TAC[][MPLS_def]
+THEN  SRW_TAC[][EXTENSION]
+THEN Q.EXISTS_TAC `PROB.I`
+THEN SRW_TAC[][]
+THEN Q.EXISTS_TAC`[]`
+THEN SRW_TAC[][]);
+
+
+
+
+
+
+
+
+
+
+val PLS_def = Define `PLS:(('a problem # 'a state # 'a state) -> (num->bool))(PROB, s1, s2) =
+    (IMAGE LENGTH {as:(α state # α state) list |(exec_plan(s1, as) = s2) /\ set as SUBSET PROB.A} )`
+
+
+val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
+    =  (IMAGE (\ (s, s'). MIN_SET (PLS(PROB, s, s'))) 
+       	      {(s1, s2) |  (FDOM (s1) = FDOM(PROB.I)) /\ (FDOM (s2) = FDOM(PROB.I))})`;
+
+(* val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
+    =   {MIN_SET(IMAGE LENGTH PLS(PROB, s1, s2)) |  (FDOM (s1) = FDOM(PROB.I)) /\ (FDOM (s2) = FDOM(PROB.I))}`; *)
+
+
+val problem_plan_bound_def = Define `problem_plan_bound(PROB: 'a problem)
+= MAX_SET(MPLS(PROB))` ;
+
+
+val bound_main_lemma_1_1 = store_thm("bound_main_lemma_1_1",
+``!PROB s1 s2 as. plan(PROB with <|I := s1; G := s2|>, as) /\ (FDOM(s1) = FDOM(PROB.I)) /\ (FDOM(s2) = FDOM(PROB.I))
+	==>
+	?x. x IN PLS(PROB, s1, s2) /\ x <= 2 ** CARD(FDOM(PROB.I))``,
+cheat
+);
+
+val bound_main_lemma_1_2 = store_thm("bound_main_lemma_1_2",
+``!s k. (?x. x IN s /\ x <= k) ==> MIN_SET(s) <= k``,
+cheat);
+
+
+val bound_main_lemma_1 = store_thm("bound_main_lemma_1",
+``!PROB as x. (plan(PROB, as) /\ x IN MPLS(PROB)) ==> x <= 2 ** CARD(FDOM(PROB.I)) ``,
+SRW_TAC[][MPLS_def]
+THEN MP_TAC (bound_main_lemma_1_1
+		|> Q.SPEC `PROB`
+		|> Q.SPEC `s1`
+		|> Q.SPEC `s2`
+		|> Q.SPEC `as`)
+THEN SRW_TAC[][]
+THEN MP_TAC(bound_main_lemma_1_2
+			|> Q.SPEC `PLS (PROB,s1,s2)`
+			|> Q.SPEC `2 ** CARD (FDOM PROB.I)`)
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]);
+
+val bound_main_lemma_2 = store_thm("bound_main_lemma_2",
+``!s k.  (!x. x IN s ==> x <= k) ==> MAX_SET(s) <= k ``,
+cheat
+);
+
+val bound_main_lemma = store_thm("bound_main_lemma",
+``!PROB as. plan(PROB,as) ==>
+(problem_plan_bound(PROB) <= 2**(CARD (FDOM(PROB.I))))``,
+
+
+SRW_TAC[][problem_plan_bound_def]
+THEN MP_TAC (bound_main_lemma_1
+		|> Q.SPEC `PROB`
+		|> Q.SPEC `as`)
+THEN SRW_TAC[][]
+THEN MP_TAC (bound_main_lemma_2
+		|> Q.SPEC `MPLS PROB`
+		|> Q.SPEC `2**(CARD (FDOM(PROB.I)))`)
+THEN SRW_TAC[][]);
+
+
+
 val _ = export_theory();
 
 
