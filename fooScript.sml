@@ -3,7 +3,7 @@
 open HolKernel Parse boolLib bossLib
 
 val _ = new_theory "foo"
-
+open listTheory
 val sublist_def = Define`
     		  (sublist [] l1 = T) /\
   (sublist (h::t) [] = F) /\
@@ -21,7 +21,7 @@ val cons_front_lemma = prove(
 
 val sublist_NIL = store_thm(
   "sublist_NIL",
-  ``subliust (l1:'a list) [] <=> (l1 = [])``,
+  ``sublist (l1:'a list) [] <=> (l1 = [])``,
   Cases_on `l1` THEN SRW_TAC [][]); 
 val _ = export_rewrites ["sublist_NIL"]
 
@@ -33,6 +33,52 @@ val sublist_trans = store_thm(
   Cases_on `l2` THEN FULL_SIMP_TAC (srw_ss()) [] THEN 
   METIS_TAC [sublist_def]);
 
+
+val append_sublist_1 = store_thm("append_sublist_1",
+``!l1 l2 l. sublist (l1 ++ l2 ) l
+      	       ==> sublist (l1) l /\ sublist (l2) l``,
+Induct_on `l`
+THEN SRW_TAC[][]
+THEN Cases_on `l1`
+THEN FULL_SIMP_TAC(srw_ss())[]
+THENL
+[
+        `sublist t l` by (FIRST_X_ASSUM (Q.SPECL_THEN [`t`,`l2`] MP_TAC)  THEN SRW_TAC[][]) 
+        THEN SRW_TAC[][]
+        ,
+        METIS_TAC[(GSYM (MATCH_MP AND2_THM APPEND))]
+	,
+	Cases_on `l2`
+	THEN FULL_SIMP_TAC(srw_ss())[]
+	THEN METIS_TAC[]
+	,
+	Q.PAT_ASSUM `sublist (h'::(t ++ l2)) l` (ASSUME_TAC o REWRITE_RULE[(GSYM (MATCH_MP AND2_THM APPEND))])
+	THEN `sublist l2 l` by (FIRST_X_ASSUM (Q.SPECL_THEN [`h'::t`, `l2`] MP_TAC)  THEN SRW_TAC[][]) 
+	THEN Cases_on `l2`
+	THEN FULL_SIMP_TAC(srw_ss())[]
+]);
+
+
+
+val append_sublist = store_thm("append_sublist",
+``!l1 l2 l3 l. sublist (l1 ++ l2 ++ l3) l
+      	       ==> sublist (l1 ++ l3) l``,
+Induct_on `l`
+THEN SRW_TAC[][]
+THEN Cases_on `l1`
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN1 METIS_TAC[append_sublist_1]
+THEN1 METIS_TAC[]
+THEN REWRITE_TAC[ Once (GSYM (MATCH_MP AND2_THM APPEND))]
+THEN Q.PAT_ASSUM `sublist (h'::(t ++ l2 ++ l3)) l` (ASSUME_TAC o REWRITE_RULE[(GSYM (MATCH_MP AND2_THM APPEND))]) 
+THEN METIS_TAC[]);
+
+
+val sublist_refl = store_thm("sublist_refl",
+``!l. sublist l l``,
+Induct_on `l`
+THEN SRW_TAC[][]
+);
 val _ = export_theory()
 
 

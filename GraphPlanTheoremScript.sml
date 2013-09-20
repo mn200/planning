@@ -707,7 +707,7 @@ THEN SRW_TAC[][]);
 
 
 val graph_plan_lemma_8_2 = store_thm("graph_plan_lemma_8_2",
-``!as vs. (as_proj(as, vs)) =  (FILTER (\a. FDOM (SND a) <> EMPTY) (MAP (\ a. (DRESTRICT (FST a) vs, DRESTRICT (SND a) vs)) as))``,
+``!as vs. (as_proj(as, vs)) =  (FILTER (\a. FDOM (SND a) <> EMPTY) (MAP (\ a. action_proj(a, vs)) as))``,
 Induct_on `as` 
 THEN SRW_TAC[][as_proj_def, action_proj_def]);
 
@@ -1296,7 +1296,7 @@ METIS_TAC[graph_plan_lemma_12,  child_parent_lemma_1]);
 
 val child_parent_lemma_2_1_1 = store_thm("child_parent_lemma_2_1_1",
 ``!PROB vs as s.
-	  (planning_problem(PROB)    /\ (FDOM s = FDOM PROB.I) 
+	  (planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
 	  /\ (set as SUBSET PROB.A) /\ (FINITE vs) 
 	  /\ child_parent_rel(PROB, vs))
 	  ==>
@@ -1592,15 +1592,6 @@ THEN ASSUME_TAC(Q.SPEC  `2 ** CARD ((FDOM PROB.I) DIFF vs)`
 				(Q.ISPEC `(λas''. (exec_plan (s,as'') = exec_plan (s,as)) ∧ set as'' ⊆ PROB.A /\ EVERY (λa. varset_action (a,FDOM PROB.I DIFF vs)) as'')`
 					  general_theorem)))
 THEN METIS_TAC[FDOM_FINITE, CARD_DIFF]);
-
-
-(* 
-val child_parent_lemma_2_1_3 = store_thm("child_parent_lemma_2_1_3",
-``!l P1 P2 P3 k1 k2. ((! x. MEM x l ==> (P1 x /\ ~P2 x) \/ (~P1 x /\ P2 x)) /\ LENGTH (FILTER P1 l) < k1
-     /\ (!l'.  (?pfx sfx. pfx ++ l' ++ sfx = l) /\ (! x. MEM x l' ==> (P2 x)) ==> LENGTH l' < k2 ))
-     ==>
-     LENGTH(l) < k1 * k2``
-); *)
 
 
 val list_frag_def = Define `list_frag(l, frag) <=> ?pfx sfx. pfx ++ frag ++ sfx = l` ;
@@ -1966,7 +1957,7 @@ THEN SRW_TAC[SatisfySimps.SATISFY_ss][]);
 
 
 val bound_main_lemma_2_1 = store_thm("bound_main_lemma_2_1",
-``!s:num k. (!x. x IN s ==> x <= k) ==> FINITE s``,
+``!s k. (!x. x IN s ==> x <= k) ==> FINITE s``,
 SRW_TAC[][]
 THEN `∀x. x ∈ s ⇒ x < k + 1` by (SRW_TAC[][] THEN Q.PAT_ASSUM `∀x. x ∈ s ⇒ x ≤ k` (MP_TAC o Q.SPEC `x`) THEN SRW_TAC[][] THEN DECIDE_TAC)
 THEN Q.PAT_ASSUM  `∀x. x ∈ s ⇒ x < k + 1` (MP_TAC o 
@@ -2011,78 +2002,6 @@ THEN Q.EXISTS_TAC `PROB.I`
 THEN SRW_TAC[][]
 THEN Q.EXISTS_TAC`[]`
 THEN SRW_TAC[][]);
-
-
-
-
-
-
-
-
-
-
-val PLS_def = Define `PLS:(('a problem # 'a state # 'a state) -> (num->bool))(PROB, s1, s2) =
-    (IMAGE LENGTH {as:(α state # α state) list |(exec_plan(s1, as) = s2) /\ set as SUBSET PROB.A} )`
-
-
-val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
-    =  (IMAGE (\ (s, s'). MIN_SET (PLS(PROB, s, s'))) 
-       	      {(s1, s2) |  (FDOM (s1) = FDOM(PROB.I)) /\ (FDOM (s2) = FDOM(PROB.I))})`;
-
-(* val MPLS_def = Define `MPLS:('a problem -> (num -> bool))(PROB)
-    =   {MIN_SET(IMAGE LENGTH PLS(PROB, s1, s2)) |  (FDOM (s1) = FDOM(PROB.I)) /\ (FDOM (s2) = FDOM(PROB.I))}`; *)
-
-
-val problem_plan_bound_def = Define `problem_plan_bound(PROB: 'a problem)
-= MAX_SET(MPLS(PROB))` ;
-
-
-val bound_main_lemma_1_1 = store_thm("bound_main_lemma_1_1",
-``!PROB s1 s2 as. plan(PROB with <|I := s1; G := s2|>, as) /\ (FDOM(s1) = FDOM(PROB.I)) /\ (FDOM(s2) = FDOM(PROB.I))
-	==>
-	?x. x IN PLS(PROB, s1, s2) /\ x <= 2 ** CARD(FDOM(PROB.I))``,
-cheat
-);
-
-val bound_main_lemma_1_2 = store_thm("bound_main_lemma_1_2",
-``!s k. (?x. x IN s /\ x <= k) ==> MIN_SET(s) <= k``,
-cheat);
-
-
-val bound_main_lemma_1 = store_thm("bound_main_lemma_1",
-``!PROB as x. (plan(PROB, as) /\ x IN MPLS(PROB)) ==> x <= 2 ** CARD(FDOM(PROB.I)) ``,
-SRW_TAC[][MPLS_def]
-THEN MP_TAC (bound_main_lemma_1_1
-		|> Q.SPEC `PROB`
-		|> Q.SPEC `s1`
-		|> Q.SPEC `s2`
-		|> Q.SPEC `as`)
-THEN SRW_TAC[][]
-THEN MP_TAC(bound_main_lemma_1_2
-			|> Q.SPEC `PLS (PROB,s1,s2)`
-			|> Q.SPEC `2 ** CARD (FDOM PROB.I)`)
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][]);
-
-val bound_main_lemma_2 = store_thm("bound_main_lemma_2",
-``!s k.  (!x. x IN s ==> x <= k) ==> MAX_SET(s) <= k ``,
-cheat
-);
-
-val bound_main_lemma = store_thm("bound_main_lemma",
-``!PROB as. plan(PROB,as) ==>
-(problem_plan_bound(PROB) <= 2**(CARD (FDOM(PROB.I))))``,
-
-
-SRW_TAC[][problem_plan_bound_def]
-THEN MP_TAC (bound_main_lemma_1
-		|> Q.SPEC `PROB`
-		|> Q.SPEC `as`)
-THEN SRW_TAC[][]
-THEN MP_TAC (bound_main_lemma_2
-		|> Q.SPEC `MPLS PROB`
-		|> Q.SPEC `2**(CARD (FDOM(PROB.I)))`)
-THEN SRW_TAC[][]);
-
 
 
 val _ = export_theory();

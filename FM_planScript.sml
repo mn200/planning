@@ -76,13 +76,6 @@ val general_theorem = store_thm("general_theorem",
     !p. P p ==> ?p'. P p' /\ f p' <= l``,
   NTAC 4 STRIP_TAC THEN (* GEN_TAC THEN completeInduct_on `f p` THEN *)
   Q_TAC SUFF_TAC `!n p. (n = f p) /\ P p ==> ?p'. P p' /\ f p' <= l` THEN1 METIS_TAC[] THEN
-  (* MATCH_MP_TAC 
-    (arithmeticTheory.COMPLETE_INDUCTION 
-    |> SPEC_ALL 
-    |> INST [``P:num->bool`` |-> 
-             ``\n:num. !p:'a. (n = f p) /\ P p ==> ?p'. P p' /\ f p' <= l``]
-    |> BETA_RULE) *)
-
   HO_MATCH_MP_TAC arithmeticTheory.COMPLETE_INDUCTION THEN 
   REPEAT STRIP_TAC THEN 
   Cases_on `f p <= l` THENL [
@@ -850,18 +843,37 @@ THEN ` plan (PROB,as1 ++ as3)` by METIS_TAC[cycle_removal_lemma]
 THEN METIS_TAC[lemma_3_1]
 );
 
+
+
+val lemma_3 = store_thm("lemma_3",
+``!as PROB. plan(PROB,as) /\ ((LENGTH(as)) > (2** (CARD (FDOM (PROB.I))))) ==>
+      ?as'. plan(PROB,as') /\ (LENGTH(as')<LENGTH(as)) /\ sublist as' as``,
+SRW_TAC[][]
+THEN `?as1 as2 as3. (as1++as2++as3 = as) /\ (exec_plan(PROB.I,as1++as2) = exec_plan(PROB.I,as1)) /\  ~(as2=[])` by METIS_TAC[lemma_2]
+THEN ` plan (PROB,as1 ++ as3)` by METIS_TAC[cycle_removal_lemma]
+THEN Q.EXISTS_TAC `as1 ++ as3`
+THEN METIS_TAC[lemma_3_1, append_sublist, sublist_refl]
+);
+
 val main_lemma = store_thm("main_lemma",
 ``!PROB as. plan(PROB, as:(α state # α state) list)
-	 ==> ?as'. plan(PROB,as') /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I)))))``,
+	 ==> ?as'. plan(PROB,as') /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I))))) /\ sublist as' as``,
 SRW_TAC[][]
 THEN Cases_on`(LENGTH(as) <=  (2** (CARD (FDOM (PROB.I)))))`
 THENL
 [
 	 Q.EXISTS_TAC `as`
-	 THEN METIS_TAC[]
+	 THEN METIS_TAC[sublist_refl]
 	,
-	`(LENGTH as > 2 ** CARD (FDOM PROB.I))` by DECIDE_TAC 
-	THEN METIS_TAC[general_theorem', lemma_3 ]
+	`(LENGTH as > 2 ** CARD (FDOM PROB.I))` by DECIDE_TAC
+	THEN ASSUME_TAC(Q.SPEC `as` sublist_refl)
+	THEN MP_TAC (general_theorem
+		|> Q.ISPEC `(\as''. plan(PROB, as'') /\ sublist as'' as)` 
+		|> Q.SPEC `LENGTH`
+		|> Q.SPEC `(2** (CARD (FDOM (PROB.I))))`)
+	THEN FIRST_X_ASSUM MATCH_MP_TAC
+	THEN SRW_TAC[][]
+	THEN METIS_TAC[general_theorem, lemma_3]
 ]);
 val _ = export_theory();
 
