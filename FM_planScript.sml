@@ -4,6 +4,7 @@ open HolKernel Parse boolLib bossLib;
 open finite_mapTheory
 open arithmeticTheory
 open pred_setTheory
+(* open fooTheory *)
 
 val _ = new_theory "FM_plan";
 val _ = type_abbrev("state", ``:'a |->bool``)
@@ -74,7 +75,7 @@ THEN	SRW_TAC [][]
 val general_theorem = store_thm("general_theorem",
   ``!P f l. (!p. P p /\ f p > l:num ==> ?p'. P p' /\ f p' < f p) ==>
     !p. P p ==> ?p'. P p' /\ f p' <= l``,
-  NTAC 4 STRIP_TAC THEN (* GEN_TAC THEN completeInduct_on `f p` THEN *)
+  NTAC 4 STRIP_TAC THEN
   Q_TAC SUFF_TAC `!n p. (n = f p) /\ P p ==> ?p'. P p' /\ f p' <= l` THEN1 METIS_TAC[] THEN
   HO_MATCH_MP_TAC arithmeticTheory.COMPLETE_INDUCTION THEN 
   REPEAT STRIP_TAC THEN 
@@ -857,7 +858,7 @@ THEN METIS_TAC[lemma_3_1, append_sublist, sublist_refl]
 
 val main_lemma = store_thm("main_lemma",
 ``!PROB as. plan(PROB, as:(α state # α state) list)
-	 ==> ?as'. plan(PROB,as') /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I))))) /\ sublist as' as``,
+	 ==> ?as'. plan(PROB,as') (*  /\ sublist as' as *) /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I)))))``,
 SRW_TAC[][]
 THEN Cases_on`(LENGTH(as) <=  (2** (CARD (FDOM (PROB.I)))))`
 THENL
@@ -866,14 +867,19 @@ THENL
 	 THEN METIS_TAC[sublist_refl]
 	,
 	`(LENGTH as > 2 ** CARD (FDOM PROB.I))` by DECIDE_TAC
-	THEN ASSUME_TAC(Q.SPEC `as` sublist_refl)
+	THEN ASSUME_TAC(Q.SPEC `as` (sublist_refl |> INST_TYPE [alpha |-> ``:('a state # 'a state )``]))
 	THEN MP_TAC (general_theorem
 		|> Q.ISPEC `(\as''. plan(PROB, as'') /\ sublist as'' as)` 
 		|> Q.SPEC `LENGTH`
 		|> Q.SPEC `(2** (CARD (FDOM (PROB.I))))`)
-	THEN FIRST_X_ASSUM MATCH_MP_TAC
 	THEN SRW_TAC[][]
-	THEN METIS_TAC[general_theorem, lemma_3]
+	THEN Q.PAT_ASSUM `a ⇒ 
+	     		     ∀p.
+			        plan (PROB,p) ∧ b ⇒
+				 ∃p'.(plan (PROB,p') ∧ c) ∧ LENGTH p' ≤ 2 ** CARD (FDOM PROB.I)` 
+				 (MATCH_MP_TAC o REWRITE_RULE[GSYM CONJ_ASSOC] o Q.SPEC `as` o REWRITE_RULE[AND_IMP_INTRO] o (CONV_RULE RIGHT_IMP_FORALL_CONV)) 
+	THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+	THEN METIS_TAC[sublist_trans, lemma_3]
 ]);
 val _ = export_theory();
 
