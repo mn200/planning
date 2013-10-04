@@ -13,9 +13,10 @@ val sublist_def = Define`
 val _ = export_rewrites ["sublist_def"];
 
 
-val cons_front_lemma = prove(
-  ``!l1 l2. sublist l1 l2 ==> sublist l1 (h::l2)``,
-  Induct_on `l1` THEN SRW_TAC [][] THEN Cases_on `l2` THEN SRW_TAC [][]);
+val sublist_cons = store_thm("sublist_cons",
+``!l1 l2 h. sublist l1 l2 ==> sublist l1
+  (h::l2)``, Induct_on `l1` THEN SRW_TAC [][] THEN Cases_on `l2` THEN
+  SRW_TAC [][]);
 
 val sublist_NIL = store_thm(
   "sublist_NIL",
@@ -99,8 +100,30 @@ cheat
 );
 
 val sublist_filter = store_thm("sublist_filter",
-``!l. sublist (FILTER P l) l``,
+``!l P. sublist (FILTER P l) l``,
 cheat
 );
+
+val sublist_append_2 = store_thm("sublist_append_2",
+``!l1 l2 l3. sublist l1 l2 
+      	     	  ==> sublist l1 (l2 ++ l3)``,
+cheat
+);
+
+val sublist_cons_2 = store_thm("sublist_append_2",
+``!l1 l2 h. sublist (h::l1) (h::l2)
+      	     	  <=> sublist l1 l2``,
+cheat);
+
+val sublist_cons_3 = store_thm("sublist_append_3",
+``!l1 l2 h. sublist (h::l1) (l2)
+      	     	  ==> sublist l1 l2``,
+cheat);
+
+val sublist_every = store_thm("sublist_every",
+``!l1 l2 h. sublist (l1) (l2) /\ EVERY P l2
+      	     	  ==> EVERY P l1 ``,
+cheat);
+
 
 val _ = export_theory()

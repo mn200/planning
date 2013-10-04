@@ -858,7 +858,7 @@ THEN METIS_TAC[lemma_3_1, append_sublist, sublist_refl]
 
 val main_lemma = store_thm("main_lemma",
 ``!PROB as. plan(PROB, as:(α state # α state) list)
-	 ==> ?as'. plan(PROB,as') (*  /\ sublist as' as *) /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I)))))``,
+	 ==> ?as'. plan(PROB,as')  /\ sublist as' as  /\ (LENGTH(as') <=  (2** (CARD (FDOM (PROB.I)))))``,
 SRW_TAC[][]
 THEN Cases_on`(LENGTH(as) <=  (2** (CARD (FDOM (PROB.I)))))`
 THENL
