@@ -1,3 +1,127 @@
+
+(*
+val bound_child_parent_lemma_1_1_1_3_1 = store_thm("bound_child_parent_lemma_1_1_1_3_1",
+``!PROB vs s as as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
+	     	    /\ set as SUBSET PROB.A /\ sublist as' (as_proj(as, vs)) 
+		    /\ sat_precond_as(s, as) /\ no_effectless_act(as)
+		    /\ (exec_plan(DRESTRICT s vs, as') = exec_plan(DRESTRICT s vs, as_proj(as, vs)))
+     	    	  ==> sat_precond_as(s, replace_projected([], as', as, vs))``,
+NTAC 2 STRIP_TAC
+THEN Induct_on `as`
+THEN SRW_TAC[][]
+THEN Cases_on `as'`
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def]
+THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def]
+THENL
+[
+MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
+			|> Q.SPEC `PROB`
+			|> Q.SPEC `vs`
+			|> Q.SPEC `as`
+			|> Q.SPEC `state_succ s h`
+			|> Q.SPEC `state_succ s h`)
+THEN SRW_TAC[][]
+THEN METIS_TAC[FDOM_state_succ, planning_problem_def]
+,
+MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
+			|> Q.SPEC `PROB`
+			|> Q.SPEC `vs`
+			|> Q.SPEC `as`
+			|> Q.SPEC `state_succ s h`
+			|> Q.SPEC `s`)
+THEN SRW_TAC[][]
+THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
+THEN MATCH_MP_TAC(GSYM graph_plan_lemma_1_2)
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][child_parent_lemma_xxx]
+,
+MP_TAC(graph_plan_lemma_22_3_1 
+		       |> Q.SPEC `[h]`
+		       |> Q.SPEC `[]`
+		       |> Q.SPEC `t`
+		       |> Q.SPEC `as`
+		       |> Q.SPEC `vs`)
+THEN SRW_TAC[][sat_precond_as_def]
+THEN FIRST_X_ASSUM MATCH_MP_TAC
+THEN SRW_TAC[][]
+THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
+THEN MP_TAC(child_parent_lemma_xxxxx
+		  |> Q.SPEC `PROB`
+		  |> Q.SPEC `h`
+		  |> Q.SPEC `vs`)
+THEN SRW_TAC[][]
+THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
+			  |> INST_TYPE [alpha |-> ``:'a``] 
+			  |> INST_TYPE [beta |-> ``:bool``]
+			  |> INST_TYPE [gamma |-> ``:bool``]
+			  |> Q.SPEC `as`
+			  |> Q.SPEC `h`
+			  |> Q.SPEC `vs`))
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+THEN FULL_SIMP_TAC(bool_ss)[exec_plan_def, sublist_cons_2]
+THEN MP_TAC(graph_plan_lemma_2_3_8_1 |> Q.SPEC `s` |> Q.SPEC `vs` |> Q.SPEC `h`)
+THEN SRW_TAC[][]
+THEN FULL_SIMP_TAC(bool_ss)[]
+,
+
+FIRST_X_ASSUM MATCH_MP_TAC
+THEN SRW_TAC[][]
+THEN MP_TAC(child_parent_lemma_xxxxx
+		  |> Q.SPEC `PROB`
+		  |> Q.SPEC `h`
+		  |> Q.SPEC `vs`)
+THEN SRW_TAC[][]
+THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
+			  |> INST_TYPE [alpha |-> ``:'a``] 
+			  |> INST_TYPE [beta |-> ``:bool``]
+			  |> INST_TYPE [gamma |-> ``:bool``]
+			  |> Q.SPEC `as`
+			  |> Q.SPEC `h`
+			  |> Q.SPEC `vs`))
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+
+
+THEN FULL_SIMP_TAC(bool_ss)[sublist_def]
+
+
+]
+);
+
+
+
+val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
+``!PROB s as vs as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
+	     	 /\ set as SUBSET PROB.A /\ sat_precond_as(s, as) /\ sublist as' (as_proj(as, vs)) 
+		 /\ no_effectless_act(as) /\ sat_precond_as(s, as')
+		 ==>
+		    (DRESTRICT (exec_plan(s, (replace_projected([], as', as, vs)))) vs 
+		    	       = exec_plan(DRESTRICT s vs , as'))``,
+SRW_TAC[][]
+THEN MP_TAC(bound_child_parent_lemma_1_1_1_2_1
+		  |> Q.SPEC `PROB`
+		  |> Q.SPEC `as`
+		  |> Q.SPEC `as'`
+		  |> Q.SPEC `vs`)
+THEN SRW_TAC[][]
+THEN FULL_SIMP_TAC(srw_ss())[]
+
+
+THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_1
+				|> Q.SPEC `PROB`
+				|> Q.SPEC `vs`
+				|> Q.SPEC `s`
+				|> Q.SPEC `as`
+				|> Q.SPEC `as'`)
+THEN SRW_TAC[][]
+THEN MP_TAC(graph_plan_lemma_1
+		|> Q.SPEC `s`
+		|> Q.SPEC `vs`
+		|> Q.ISPEC `replace_projected ([],as',as,vs)`)
+THEN SRW_TAC[][]
+THEN METIS_TAC[]
+);
+
+*)
+
 open HolKernel Parse boolLib bossLib;
 
 open finite_mapTheory
@@ -656,7 +780,7 @@ THEN SRW_TAC[][sublist_def]);
 val graph_plan_lemma_7_8 = store_thm("graph_plan_lemma_7_8",
 ``!s as. sublist (rem_condless_act(s, [], as)) as``,
 Induct_on `as`
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][rem_condless_act_def, graph_plan_lemma_16_9_1]
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][rem_condless_act_def, graph_plan_lemma_7_8_1]
 THEN METIS_TAC[graph_plan_lemma_7_2_1_1, sublist_def]);
 
 
@@ -999,7 +1123,7 @@ THEN SRW_TAC[][rem_effectless_act_def]);
 val graph_plan_lemma_16_9 = store_thm("graph_plan_lemma_16_9",
 ``!as. sublist (rem_effectless_act(as)) as``,
 Induct_on `as`
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][rem_effectless_act_def, graph_plan_lemma_7_8_1]);
+THEN SRW_TAC[SatisfySimps.SATISFY_ss][rem_effectless_act_def, graph_plan_lemma_7_8_1, sublist_def]);
 
 
 val graph_plan_lemma_16_10 = store_thm("graph_plan_lemma_16_10",
@@ -1257,6 +1381,7 @@ THEN SRW_TAC[][as_proj_parent_def, exec_plan_def]
 THEN REWRITE_TAC[GSYM as_proj_parent_def]
 THEN METIS_TAC[child_parent_lemma_1_1_5, graph_plan_lemma_1_2, child_parent_lemma_1_1_4] 
 );
+
 
 
 val child_parent_lemma_2_1_1_1_1 = store_thm("child_parent_lemma_2_1_1_1_1",
@@ -2090,7 +2215,7 @@ val graph_plan_lemma_22_2 = store_thm("graph_plan_lemma_22_2",
 ``!as as' vs s. sublist (replace_projected([], as', as, vs)) as``,
 Induct_on `as`
 THEN Cases_on `as'`
-THEN SRW_TAC[][replace_projected_def, sublist_filter, sublist_cons, sublist_trans]
+THEN SRW_TAC[][replace_projected_def, sublist_filter, sublist_cons, sublist_trans, sublist_def]
 THEN MP_TAC(graph_plan_lemma_22_2_1
 		|> Q.SPEC `as`
 		|> Q.SPEC `t`
@@ -2105,7 +2230,7 @@ THEN MP_TAC(graph_plan_lemma_22_2_1
 		|> Q.SPEC `as`
 		|> Q.SPEC `[h']`
 		|> Q.SPEC `vs`)
-THEN SRW_TAC[][]);
+THEN SRW_TAC[][sublist_def]);
 
 
 val graph_plan_lemma_22_3_1 = store_thm("graph_plan_lemma_22_3_1",
@@ -2297,8 +2422,6 @@ THEN SRW_TAC[][]);
 val bound_child_parent_lemma_1_1_1_1_1 = store_thm("bound_child_parent_lemma_1_1_1_1_1",
 ``!PROB as. plan(PROB, as)
 	 ==> ?as'. plan(PROB, as') /\ sublist as' as /\ LENGTH as' <= problem_plan_bound(PROB)``,
-
-
 SRW_TAC[][plan_def]
 THEN MP_TAC(bound_main_lemma
 		|> Q.SPEC `PROB`)
@@ -2481,7 +2604,7 @@ THENL[
 			|> Q.SPEC `as`
 			|> Q.SPEC `vs`)]
 	  THEN SRW_TAC[][]
-	  THEN MP_TAC(graph_plan_lemma_2_3_9
+	  THEN MP_TAC(graph_plan_lemma_2_3_9 
 			  |> Q.ISPEC `(replace_projected ([],t,as,vs))`
 			  |> Q.SPEC `h`
 			  |> Q.SPEC `vs`)
@@ -2632,200 +2755,266 @@ val bound_child_parent_lemma_1_1_1_3_1_2_1 = store_thm("bound_child_parent_lemma
      ==> (state_succ s (action_proj(a, vs)) = state_succ s a)``,
 cheat);
 
-(* val bound_child_parent_lemma_1_1_1_3_1_2 = store_thm("bound_child_parent_lemma_1_1_1_3_1_2",
-``!a vs. ``
+
+
 val bound_child_parent_lemma_1_1_1_3_1 = store_thm("bound_child_parent_lemma_1_1_1_3_1",
-``!PROB vs s as as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
-	     	 /\ set as SUBSET PROB.A /\ sublist as' (as_proj(as, vs)) /\ no_effectless_act(as)
-		 /\ sat_precond_as(s, as) /\ sat_precond_as(s, as')
-     	    	  ==> sat_precond_as(s, replace_projected([], as', as, vs))``,
-NTAC 2 STRIP_TAC
-THEN Induct_on `as`
-THEN SRW_TAC[][]
-THEN Cases_on `as'`
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def]
-THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def]
-THENL
-[
-MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
-			|> Q.SPEC `PROB`
-			|> Q.SPEC `vs`
-			|> Q.SPEC `as`
-			|> Q.SPEC `state_succ s h`
-			|> Q.SPEC `state_succ s h`)
-THEN SRW_TAC[][]
-THEN METIS_TAC[FDOM_state_succ, planning_problem_def]
-,
-MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
-			|> Q.SPEC `PROB`
-			|> Q.SPEC `vs`
-			|> Q.SPEC `as`
-			|> Q.SPEC `state_succ s h`
-			|> Q.SPEC `s`)
-THEN SRW_TAC[][]
-THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
-THEN MATCH_MP_TAC(GSYM graph_plan_lemma_1_2)
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][child_parent_lemma_xxx]
-,
-MP_TAC(graph_plan_lemma_22_3_1 
-		       |> Q.SPEC `[h]`
-		       |> Q.SPEC `[]`
-		       |> Q.SPEC `t`
-		       |> Q.SPEC `as`
-		       |> Q.SPEC `vs`)
-THEN SRW_TAC[][sat_precond_as_def]
-THEN FIRST_X_ASSUM MATCH_MP_TAC
-THEN SRW_TAC[][]
-THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
-THEN1 (MP_TAC(child_parent_lemma_xxxxx
-		  |> Q.SPEC `PROB`
-		  |> Q.SPEC `h`
-		  |> Q.SPEC `vs`)
-THEN SRW_TAC[][]
-THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
-			  |> INST_TYPE [alpha |-> ``:'a``] 
-			  |> INST_TYPE [beta |-> ``:bool``]
-			  |> INST_TYPE [gamma |-> ``:bool``]
-			  |> Q.SPEC `as`
-			  |> Q.SPEC `h`
-			  |> Q.SPEC `vs`))
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
-THEN FULL_SIMP_TAC(bool_ss)[sublist_cons_2])
+``!s vs P as. (∀a. MEM a as ∧ ~P a ⇒ DISJOINT (FDOM (SND a)) vs)
+      	     	 ⇒ (DRESTRICT s vs =
+      		   	DRESTRICT (exec_plan (s,FILTER (λa. ¬P a) as)) vs)``,
+cheat);
 
-THEN1 (MP_TAC(bound_child_parent_lemma_1_1_1_3_1_2_1 |> Q.SPEC `s` |> Q.SPEC `h` |> Q.SPEC `vs`)
-THEN SRW_TAC[][]
-THEN FULL_SIMP_TAC(bool_ss)[])
-,
-FIRST_X_ASSUM MATCH_MP_TAC
-THEN SRW_TAC[][]
-THEN MP_TAC(child_parent_lemma_xxxxx
-		  |> Q.SPEC `PROB`
-		  |> Q.SPEC `h`
-		  |> Q.SPEC `vs`)
-THEN SRW_TAC[][]
-THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
-			  |> INST_TYPE [alpha |-> ``:'a``] 
-			  |> INST_TYPE [beta |-> ``:bool``]
-			  |> INST_TYPE [gamma |-> ``:bool``]
-			  |> Q.SPEC `as`
-			  |> Q.SPEC `h`
-			  |> Q.SPEC `vs`))
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
-THEN FULL_SIMP_TAC(bool_ss)[sublist_def]
-
-
-]
-);
-
-
-
-val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
-``!PROB s as vs as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
-	     	 /\ set as SUBSET PROB.A /\ sat_precond_as(s, as) /\ sublist as' (as_proj(as, vs)) 
-		 /\ no_effectless_act(as) /\ sat_precond_as(s, as')
-		 ==>
-		    (DRESTRICT (exec_plan(s, (replace_projected([], as', as, vs)))) vs 
-		    	       = exec_plan(DRESTRICT s vs , as'))``,
-SRW_TAC[][]
-THEN MP_TAC(bound_child_parent_lemma_1_1_1_2_1
-		  |> Q.SPEC `PROB`
-		  |> Q.SPEC `as`
-		  |> Q.SPEC `as'`
-		  |> Q.SPEC `vs`)
-THEN SRW_TAC[][]
-THEN FULL_SIMP_TAC(srw_ss())[]
-
-
-THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_1
-				|> Q.SPEC `PROB`
-				|> Q.SPEC `vs`
-				|> Q.SPEC `s`
-				|> Q.SPEC `as`
-				|> Q.SPEC `as'`)
-THEN SRW_TAC[][]
-THEN MP_TAC(graph_plan_lemma_1
-		|> Q.SPEC `s`
-		|> Q.SPEC `vs`
-		|> Q.ISPEC `replace_projected ([],as',as,vs)`)
-THEN SRW_TAC[][]
-THEN METIS_TAC[]
+(*
+val bound_child_parent_lemma_1_1_1_3_2 = store_thm("bound_child_parent_lemma_1_1_1_3_2",
+``! as as' as'' s h. sublist (h::as) (as' ++ [h] ++ as'') 
+       	   	   /\ (exec_plan(s, as' ++ [h] ++ as'') = exec_plan(s, h :: as))
+		   ==> (exec_plan(s, [h] ++ as'') = exec_plan(s, h :: as))``,
+cheat
 );
 
 *)
 
+val bound_child_parent_lemma_1_1_1_3_2 = store_thm("bound_child_parent_lemma_1_1_1_3_2",
+``! as as' as'' as''' s h. sublist (h::as) (as' ++ as'' ++ [h] ++ as''') 
+       	   	   /\ (exec_plan(s, as' ++ as'' ++ [h] ++ as''') = exec_plan(s, h :: as))
+		   /\ (~MEM h as')
+		   ==> (exec_plan(s, as'' ++ [h] ++ as''') = exec_plan(s, h :: as))``,
+cheat
+);
+
+
+
+val bound_child_parent_lemma_1_1_1_3_3 = store_thm("bound_child_parent_lemma_1_1_1_3_3",
+``!as as_c' as_c'' vs. (as_proj(as, vs) = (as_c' ++ as_c'')) 
+      	    	       ==> ? as' as''. (as' ++ as'' = as) /\ (as_proj(as', vs) = as_c')
+		       	     	       /\ (as_proj(as'', vs) = as_c'')``,
+cheat);
+
+val bound_child_parent_lemma_1_1_1_3_4 = store_thm("bound_child_parent_lemma_1_1_1_3_4",
+``!as as' s. sat_precond_as(s, as ++ as') <=> sat_precond_as(exec_plan(s, as), as')``,
+cheat
+);
+
+val bound_child_parent_lemma_1_1_1_3_5 = store_thm("bound_child_parent_lemma_1_1_1_3_5",
+``! as as' s. sat_precond_as(s, as ++ as') <=> sat_precond_as(exec_plan(s, as), as')``,
+cheat
+);
+
+
+val bound_child_parent_lemma_1_1_1_3_6 = store_thm("bound_child_parent_lemma_1_1_1_3_6",
+``!  h vs as as' as'' as'''.  EVERY (λa. action_proj (a,vs) ≠ action_proj (h,vs)) as''
+       ==> (replace_projected (as,h::as',as'' ++ as''',vs) 
+       	   = replace_projected (as ++ (FILTER (\a. varset_action(a, vs)) as''),h::as',as''',vs)) ``,
+cheat
+);
+
+
+val _ = export_rewrites["sublist_def"]
 
 val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
-``!PROB vs s as as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
-	     	 /\ set as SUBSET PROB.A /\ sublist as' (as_proj(as, vs)) 
-		 /\ no_effectless_act(as)
+``!PROB vs s s' as as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
+	     	 /\ (FDOM s' = FDOM PROB.I) /\ set as SUBSET PROB.A /\ sublist as' (as_proj(as, vs)) 
+		 /\ no_effectless_act(as) (* /\ sat_precond_as(s', as) *)
+		 /\ (exec_plan(DRESTRICT s vs, as') = exec_plan(DRESTRICT s vs, as_proj(as, vs)))
+		 /\ (DRESTRICT s vs = DRESTRICT s' vs)
 		 ==>
-		    (DRESTRICT (exec_plan(s, (replace_projected([], as', as, vs)))) vs 
+		    (DRESTRICT (exec_plan(s', (replace_projected([], as', as, vs)))) vs 
 		    	       = exec_plan(DRESTRICT s vs , as'))``,
-
-
 NTAC 2 STRIP_TAC
 THEN Induct_on `as`
 THEN SRW_TAC[][]
 THEN Cases_on `as'`
-THEN1 (SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def,exec_plan_def]
-      THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def])
-THEN1 (SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def,exec_plan_def]
-      THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def, as_proj_def])
-THEN1 (FULL_SIMP_TAC(bool_ss)[no_effectless_act_def])
+THEN1 (SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def,exec_plan_def, rem_condless_act_def]
+      THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def, exec_plan_def])
+THEN1 (SRW_TAC[SatisfySimps.SATISFY_ss][no_effectless_act_def, replace_projected_def, graph_plan_lemma_16_11, sat_precond_as_def,exec_plan_def, rem_condless_act_def]
+      THEN FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sublist_def, sat_precond_as_def, as_proj_def, exec_plan_def])
+THEN1 (FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, exec_plan_def]
+      THEN SRW_TAC[SatisfySimps.SATISFY_ss][replace_projected_def, exec_plan_def, rem_condless_act_def, sublist_def]
+      THEN1 (MP_TAC(REWRITE_RULE[as_proj_parent_def] child_parent_lemma_2_1_1_1_1_1 |> Q.SPEC `PROB` |> Q.SPEC `state_succ s' h` |> Q.SPEC `as` |> Q.SPEC `vs`)
+      	    THEN SRW_TAC[][sublist_def]
+	    THEN `EVERY (λa. FDOM (SND a) ≠ ∅) as ` by METIS_TAC[
+     	    	 (graph_plan_lemma_16_7
+			|> INST_TYPE [alpha |-> ``:'a state``]
+			|> INST_TYPE [beta |-> ``:'a``]
+			|> INST_TYPE [gamma |-> ``:bool``]
+			|> Q.SPEC `as`)]
+	    THEN SRW_TAC[][sublist_def]
+	    THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1_1
+			|> INST_TYPE [alpha |-> ``:'a state # 'a state``]
+			|> Q.SPEC `(λa. ¬varset_action (a,vs))`
+			|> Q.SPEC `(\a. FDOM (SND a) ≠ ∅)`
+			|> Q.SPEC `as`)
+	    THEN SRW_TAC[][sublist_def]
+	    THEN FULL_SIMP_TAC(srw_ss())[]
+	    THEN METIS_TAC[child_parent_lemma_xx, graph_plan_lemma_1_2])
+      THEN1( MP_TAC(REWRITE_RULE[as_proj_parent_def] child_parent_lemma_2_1_1_1_1_1 |> Q.SPEC `PROB` |> Q.SPEC `s'` |> Q.SPEC `as` |> Q.SPEC `vs`)
+      	    THEN SRW_TAC[][]
+	    THEN `EVERY (λa. FDOM (SND a) ≠ ∅) as ` by METIS_TAC[
+     	    	 (graph_plan_lemma_16_7
+			|> INST_TYPE [alpha |-> ``:'a state``]
+			|> INST_TYPE [beta |-> ``:'a``]
+			|> INST_TYPE [gamma |-> ``:bool``]
+			|> Q.SPEC `as`)]
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1_1
+			|> INST_TYPE [alpha |-> ``:'a state # 'a state``]
+			|> Q.SPEC `(λa. ¬varset_action (a,vs))`
+			|> Q.SPEC `(\a. FDOM (SND a) ≠ ∅)`
+			|> Q.SPEC `as`)
+	    THEN SRW_TAC[][]
+	    THEN FULL_SIMP_TAC(srw_ss())[]))
+
+
+THEN1 (FULL_SIMP_TAC(bool_ss)[no_effectless_act_def, sat_precond_as_def, exec_plan_def]
       THEN SRW_TAC[SatisfySimps.SATISFY_ss][replace_projected_def, exec_plan_def]
-      THEN1()
-      THEN1())
-THENL
-[
-MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
-			|> Q.SPEC `PROB`
-			|> Q.SPEC `vs`
-			|> Q.SPEC `as`
-			|> Q.SPEC `state_succ s h`
-			|> Q.SPEC `state_succ s h`)
-THEN SRW_TAC[][]
-THEN METIS_TAC[FDOM_state_succ, planning_problem_def]
-,
-MATCH_MP_TAC(bound_child_parent_lemma_1_1_1_3_1_1
-			|> Q.SPEC `PROB`
-			|> Q.SPEC `vs`
-			|> Q.SPEC `as`
-			|> Q.SPEC `state_succ s h`
-			|> Q.SPEC `s`)
-THEN SRW_TAC[][]
-THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
-THEN MATCH_MP_TAC(GSYM graph_plan_lemma_1_2)
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][child_parent_lemma_xxx]
-,
-MP_TAC(graph_plan_lemma_22_3_1 
-		       |> Q.SPEC `[h]`
-		       |> Q.SPEC `[]`
-		       |> Q.SPEC `t`
-		       |> Q.SPEC `as`
-		       |> Q.SPEC `vs`)
-THEN SRW_TAC[][sat_precond_as_def]
-THEN FIRST_X_ASSUM MATCH_MP_TAC
-THEN SRW_TAC[][]
-THEN1 METIS_TAC[FDOM_state_succ, planning_problem_def]
-THEN1 (MP_TAC(child_parent_lemma_xxxxx
+      THEN1(MP_TAC(graph_plan_lemma_22_3_1 |> Q.SPEC `[h]`
+      					      |> Q.SPEC `[]`
+					      |> Q.SPEC `t`
+					      |> Q.SPEC `as`
+					      |> Q.SPEC `vs`)
+	    THEN SRW_TAC[][exec_plan_def]
+	    THEN MP_TAC(graph_plan_lemma_1_1 |> Q.SPEC `s'` |> Q.SPEC `h` |> Q.SPEC `vs`) 
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(child_parent_lemma_xxxxx
 		  |> Q.SPEC `PROB`
 		  |> Q.SPEC `h`
 		  |> Q.SPEC `vs`)
-THEN SRW_TAC[][]
-THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
 			  |> INST_TYPE [alpha |-> ``:'a``] 
 			  |> INST_TYPE [beta |-> ``:bool``]
 			  |> INST_TYPE [gamma |-> ``:bool``]
 			  |> Q.SPEC `as`
 			  |> Q.SPEC `h`
 			  |> Q.SPEC `vs`))
-THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
-THEN FULL_SIMP_TAC(bool_ss)[sublist_cons_2])
+	    THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+	    THEN FULL_SIMP_TAC(bool_ss)[sublist_cons_2]
+	    THEN FULL_SIMP_TAC(bool_ss)[exec_plan_def]
+	    THEN SRW_TAC[][]
+	    THEN METIS_TAC[FDOM_state_succ, planning_problem_def])
 
-THEN1 (MP_TAC(bound_child_parent_lemma_1_1_1_3_1_2_1 |> Q.SPEC `s` |> Q.SPEC `h` |> Q.SPEC `vs`)
+      THEN1(MP_TAC(child_parent_lemma_xxxxx
+		  |> Q.SPEC `PROB`
+		  |> Q.SPEC `h`
+		  |> Q.SPEC `vs`)
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(REWRITE_RULE[FDOM_DRESTRICT, GSYM DISJOINT_DEF] (graph_plan_lemma_2_3_9
+			  |> INST_TYPE [alpha |-> ``:'a``] 
+			  |> INST_TYPE [beta |-> ``:bool``]
+			  |> INST_TYPE [gamma |-> ``:bool``]
+			  |> Q.SPEC `as`
+			  |> Q.SPEC `h`
+			  |> Q.SPEC `vs`))
+	    THEN SRW_TAC[SatisfySimps.SATISFY_ss][]
+	    THEN FULL_SIMP_TAC(bool_ss)[sublist_def, exec_plan_def]
+	    THEN MP_TAC (sublist_append_exists |> INST_TYPE [alpha |-> ``:'a state # 'a state``] |> Q.SPEC `t` |> Q.SPEC `(as_proj(as, vs))` |> Q.SPEC `h'`)
+	    THEN SRW_TAC[][]
+	    THEN FULL_SIMP_TAC(bool_ss)[]
+	    THEN Q.PAT_ASSUM `exec_plan(x, y) = z` (ASSUME_TAC o REWRITE_RULE[ Once (GSYM exec_plan_def)] o GSYM o REWRITE_RULE[ Once (GSYM exec_plan_def)])
+	    THEN MP_TAC(graph_plan_lemma_7_8_1 |> INST_TYPE [alpha |-> ``:'a state # 'a state``] |> Q.SPEC `h'::t` |> Q.SPEC `(action_proj (h,vs))` |> Q.SPEC `(l3 ++ [h'] ++ l4)`)
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_2 |> Q.SPEC `t` |> Q.SPEC `[(action_proj (h,vs))]` |> Q.SPEC `l3` |> Q.SPEC `l4` |> Q.SPEC `DRESTRICT s' vs` |> Q.SPEC `h'`)
+	    THEN SRW_TAC[][]
+	    THEN REWRITE_TAC[GSYM (MATCH_MP AND1_THM exec_plan_def)]
+	    THEN ASM_SIMP_TAC(bool_ss)[]
+	    THEN Q.PAT_ASSUM `exec_plan (DRESTRICT s' vs,l3 ++ [h'] ++ l4) =
+       exec_plan (DRESTRICT s' vs,h'::t)`  (ASSUME_TAC o GSYM)
+            THEN ASM_SIMP_TAC(bool_ss)[]
+	    THEN FIRST_X_ASSUM MATCH_MP_TAC
+	    THEN Q.EXISTS_TAC `s'`
+	    THEN SRW_TAC[][]
+	    THEN MP_TAC(bound_child_parent_lemma_1_1_1_3_3  |> INST_TYPE [alpha |-> ``:'a``, beta |-> ``:bool``, gamma |-> ``:bool``]
+	    	 				    |> Q.SPEC `as`
+						    |> Q.SPEC `(l3)`
+						    |> Q.SPEC `[h'] ++ l4`
+						    |> Q.SPEC `vs`)
+	    THEN SRW_TAC[][]
+	    THEN FULL_SIMP_TAC(bool_ss) REWRITE_TAC[Once (GSYM ((MATCH_MP AND1_THM exec_plan_def) |> Q.SPEC `DRESTRICT s vs` |> Q.SPEC `l3 ++ [h'] ++ l4` |> Q.ISPEC `(action_proj (h,vs))`))]
+	    THEN SRW_TAC[][GSYM exec_plan_def]
+	    THEN FIRST_X_ASSUM MATCH_MP_TAC
+	    THEN SRW_TAC[][])
+      THEN1()));
+
+
+
+val bound_child_parent_lemma_1_1_1_3_7 = store_thm("bound_child_parent_lemma_1_1_1_3_7",
+``!PROB vs as as' as_c h. child_parent_rel(PROB, vs) /\ planning_problem(PROB) 
+	     	    /\ set as SUBSET PROB.A /\ sublist as_c (as_proj(as, vs)) 
+		    /\ varset_action(h, vs)
+		 ==>
+		    (replace_projected([], as_c, as, vs) =  h::as')
+		    	 <=>  
+			    (?as_c' as'' as''' h'. 
+			    	    (as_c = h'::as_c') /\ (as = as'' ++ [h] ++ as''') 
+				    /\ EVERY (\a. varset_action(a, vs)) as'' 
+				    /\ EVERY (\a. ~(action_proj(a, vs) = h')) as''
+				    /\ (action_proj(h, vs) = h') 
+				    /\ (replace_projected([], as_c', as''', vs) = as'))``,
+cheat);
+
+
+val bound_child_parent_lemma_1_1_1_3_8 = store_thm("bound_child_parent_lemma_1_1_1_3_8",
+``!PROB vs as as' as_c h. child_parent_rel(PROB, vs) /\ planning_problem(PROB) 
+	     	    /\ set as SUBSET PROB.A /\ sublist as_c (as_proj(as, vs)) 
+		    /\ ~varset_action(h, vs)
+		 ==>
+		    (replace_projected([], as_c, as, vs) =  h::as')
+		    	 <=>  
+			    (?as'' as'''. 
+			    	    (as = as'' ++ [h] ++ as''') 
+				    /\ EVERY (\a. varset_action(a, vs)) as'' 
+				    /\ (replace_projected([], as_c, as''', vs) = as'))``,
+cheat);
+
+
+val bound_child_parent_lemma_1_1_1_3_9 = store_thm("bound_child_parent_lemma_1_1_1_3_9",
+``!PROB vs as as_c h. child_parent_rel(PROB, vs) /\ planning_problem(PROB) 
+	     	    /\ set as SUBSET PROB.A /\ sublist as_c (as_proj(as, vs)) 
+		 ==>
+		    (replace_projected([], as_c, as, vs) =  [])
+		    	 <=>  
+			    (as_c = []) /\ EVERY (\a. varset_action(a, vs)) as``,
+cheat);
+
+
+
+val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
+``!PROB vs s s' as as_c. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
+	     	 /\ (FDOM s' = FDOM PROB.I) /\ set as SUBSET PROB.A /\ sublist as_c (as_proj(as, vs)) 
+		 /\ no_effectless_act(as) (* /\ sat_precond_as(s', as) *)
+		 /\ (exec_plan(DRESTRICT s vs, as_proj(as, vs)) = exec_plan(DRESTRICT s vs, as_c))
+		 /\ (DRESTRICT s vs = DRESTRICT s' vs)
+		 ==>
+		    (DRESTRICT (exec_plan(s', (replace_projected([], as_c, as, vs)))) vs 
+		    	       = exec_plan(DRESTRICT s vs , as_c))``,
+Induct_on `(replace_projected([], as_c, as, vs))`
 THEN SRW_TAC[][]
-THEN FULL_SIMP_TAC(bool_ss)[])
-);
+THEN1( MP_TAC(bound_child_parent_lemma_1_1_1_3_9
+			|> Q.SPEC `PROB` 
+			|> Q.SPEC `vs` 
+			|> Q.SPEC `as`
+			|> Q.SPEC `as_c`
+			|> Q.SPEC `h`)
+THEN SRW_TAC[][replace_projected_def]
+THEN MP_TAC(GSYM (child_parent_lemma_2_1_2_2_2 |> Q.ISPEC `(λa. ~varset_action (a,vs))` |> Q.SPEC `as`))
+THEN SRW_TAC[][exec_plan_def])
+
+
+THEN1(
+SRW_TAC[][]
+THEN Cases_on `varset_action(h, vs)`
+THEN1 (MP_TAC(bound_child_parent_lemma_1_1_1_3_7
+				|> Q.SPEC `PROB`
+				|> Q.SPEC `vs`
+				|> Q.SPEC `as`
+				|> Q.SPEC `v`
+				|> Q.SPEC `as_c`
+				|> Q.SPEC `h`)
+THEN SRW_TAC[][]
+THEN )
+
+THEN1()
+
+));
 
 
 val bound_child_parent_lemma_1_1_1_4 = store_thm("bound_child_parent_lemma_1_1_1_4",
