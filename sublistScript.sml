@@ -8,6 +8,12 @@ val sublist_def = Define`
   (sublist (h::t) [] = F) /\
   (sublist (x::l1) (y::l2) = (x = y) /\ sublist l1 l2 \/ sublist (x::l1) l2)`;
 
+val sublist_EQNS = store_thm(
+  "sublist_EQNS",
+  ``(sublist [] l = T) /\ (sublist (h::t) [] = F)``,
+  SRW_TAC[][sublist_def]);
+val _ = export_rewrites ["sublist_EQNS"]
+
 (* val _  = overload_on ("<=", ``sublist``) *)
 
 (* This is to make the sublist theory usable by SRW_TAC *)
@@ -155,5 +161,11 @@ val sublist_cons_3 = save_thm("sublist_cons_3", sublist_CONS1_E);
 val sublist_every = store_thm("sublist_every",
 ``!l1 l2 P. sublist l1 l2 /\ EVERY P l2 ==> EVERY P l1``,
 METIS_TAC[EVERY_MEM, sublist_subset, pred_setTheory.SUBSET_DEF]);
+
+val sublist_SING_MEM = store_thm(
+  "sublist_SING_MEM",
+  ``sublist [h] l <=> MEM h l``,
+  Induct_on `l` THEN SRW_TAC [][sublist_def]);
+val _ = export_rewrites ["sublist_SING_MEM"]
 
 val _ = export_theory()
