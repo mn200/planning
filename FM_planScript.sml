@@ -4,7 +4,7 @@ open HolKernel Parse boolLib bossLib;
 open finite_mapTheory
 open arithmeticTheory
 open pred_setTheory
-(* open fooTheory *)
+open sublistTheory
 
 val _ = new_theory "FM_plan";
 val _ = type_abbrev("state", ``:'a |->bool``)
