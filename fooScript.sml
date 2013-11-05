@@ -110,12 +110,12 @@ val sublist_append_2 = store_thm("sublist_append_2",
 cheat
 );
 
-val sublist_cons_2 = store_thm("sublist_append_2",
+val sublist_cons_2 = store_thm("sublist_cons_2",
 ``!l1 l2 h. sublist (h::l1) (h::l2)
       	     	  <=> sublist l1 l2``,
 cheat);
 
-val sublist_cons_3 = store_thm("sublist_append_3",
+val sublist_cons_3 = store_thm("sublist_cons_3",
 ``!l1 l2 h. sublist (h::l1) (l2)
       	     	  ==> sublist l1 l2``,
 cheat);
@@ -130,5 +130,9 @@ val sublist_append_exists = store_thm("sublist_append_exists",
       	     	  ==> ?l3 l4. (l2 = l3 ++ [h] ++ l4 ) /\ sublist l1 l4``,
 cheat);
 
+val sublist_append_4 = store_thm("sublist_append_4",
+``!l l1 l2 h. sublist (l) (l1 ++ [h] ++ l2) /\ EVERY
+      	     	  ==> ?l3 l4. (l2 = l3 ++ [h] ++ l4 ) /\ sublist l1 l4``,
+cheat);
 
 val _ = export_theory()
