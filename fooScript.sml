@@ -131,8 +131,14 @@ val sublist_append_exists = store_thm("sublist_append_exists",
 cheat);
 
 val sublist_append_4 = store_thm("sublist_append_4",
-``!l l1 l2 h. sublist (l) (l1 ++ [h] ++ l2) /\ EVERY
-      	     	  ==> ?l3 l4. (l2 = l3 ++ [h] ++ l4 ) /\ sublist l1 l4``,
+``!l l1 l2 h. sublist (h::l) (l1 ++ [h] ++ l2) /\ EVERY (\x. ~(h = x)) l1
+      	     	  ==> sublist l l2``,
 cheat);
+
+val sublist_append_5 = store_thm("sublist_append_5",
+``!l l1 l2 h. sublist (h::l) (l1 ++ l2) /\ EVERY (\x. ~(h = x)) l1
+      	     	  ==> sublist (h::l) l2``,
+cheat);
+
 
 val _ = export_theory()
