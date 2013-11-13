@@ -4,7 +4,8 @@ open HolKernel Parse boolLib bossLib;
 open finite_mapTheory
 open arithmeticTheory
 open pred_setTheory
-(* open fooTheory *)
+open rich_listTheory;
+open sublistTheory
 
 val _ = new_theory "FM_plan";
 val _ = type_abbrev("state", ``:'a |->bool``)
@@ -695,9 +696,6 @@ THENL
 	
 ])
 
-
-
-open rich_listTheory;
 
 val lemma_2_3_2_1 = store_thm("lemma_2_3_2_1",
 ``!l. LENGTH l >= 0``,

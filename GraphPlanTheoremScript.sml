@@ -6,9 +6,9 @@ open arithmeticTheory
 open pred_setTheory
 open rich_listTheory
 open listTheory;							 
-(* open utilsTheory;
+open utilsTheory;
 open FM_planTheory 
-open fooTheory; *)
+open sublistTheory;
 val _ = new_theory "GraphPlanTheorem";
 val dep_def = Define`dep(PROB, v1, v2) <=>  (?a. (a IN PROB.A) /\ (((v1 IN (FDOM (FST a))) /\ (v2 IN (FDOM (SND a))) ) \/ ((v1 IN (FDOM (SND a))) /\ (v2 IN (FDOM (SND a))) )) ) `;
 
@@ -2626,6 +2626,16 @@ THEN METIS_TAC[child_parent_lemma_2_1_2_4]
 );
 
 val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
+``!PROB s as vs as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
+	     	 /\ set as SUBSET PROB.A /\ sat_precond_as(s, as) /\ sublist as' (as_proj(as, vs)) 
+		 /\ no_effectless_act(as) /\ sat_precond_as(s, as')
+		 ==>
+		    (DRESTRICT (exec_plan(s, (replace_projected([], as', as, vs)))) vs 
+		    	       = exec_plan(DRESTRICT s vs , as'))``,
+cheat);
+
+(*
+val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1_3",
 ``!PROB vs s s' as as_c. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
 	     	 /\ (FDOM s' = FDOM PROB.I) /\ set as SUBSET PROB.A /\ sublist as_c (as_proj(as, vs)) 
 		 /\ no_effectless_act(as) (* /\ sat_precond_as(s', as)  *)
@@ -2635,6 +2645,7 @@ val bound_child_parent_lemma_1_1_1_3 = store_thm("bound_child_parent_lemma_1_1_1
 		    (DRESTRICT (exec_plan(s', (replace_projected([], as_c, as, vs)))) vs 
 		    	       = exec_plan(DRESTRICT s vs , as_c))``,
 cheat);
+*)
 
 val bound_child_parent_lemma_1_1_1_4 = store_thm("bound_child_parent_lemma_1_1_1_4",
 ``!PROB s as vs as'. child_parent_rel(PROB, vs) /\ planning_problem(PROB) /\ (FDOM s = FDOM PROB.I) 
@@ -2820,12 +2831,12 @@ THENL
 	   	THEN MP_TAC((Q.SPEC `Par`
 		              (Q.SPEC `l'` 
 		     	        ( Q.SPEC `h` 
-				  ( Q.SPEC `l` (Q.SPEC `l''`child_parent_lemma_2_1_4_1_1_1))))))
+				  ( Q.SPEC `l` (Q.SPEC `l''`child_parent_lemma_2_1_3_1_1_1))))))
 		THEN FULL_SIMP_TAC(srw_ss())[]
 		THEN SRW_TAC[][]	 
 		THENL
 		[
-			MP_TAC (Q.SPEC`l` (Q.SPEC `l''`  child_parent_lemma_2_1_4_1_1_2))
+			MP_TAC (Q.SPEC`l` (Q.SPEC `l''`  child_parent_lemma_2_1_3_1_1_2))
 			THEN SRW_TAC[][]
 			THEN DECIDE_TAC     
 			,
@@ -2949,7 +2960,7 @@ THENL
 	SRW_TAC[][]
 	THEN Q.EXISTS_TAC `as'` 
 	THEN SRW_TAC[][]
-	THEN METIS_TAC[graph_plan_lemma_16_10]
+	THEN METIS_TAC[graph_plan_lemma_16_11]
 	,
 	FIRST_X_ASSUM MATCH_MP_TAC
 	THEN SRW_TAC[][]
