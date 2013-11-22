@@ -17,7 +17,7 @@ val _ = export_rewrites ["sublist_EQNS"]
 (* val _  = overload_on ("<=", ``sublist``) *)
 
 (* This is to make the sublist theory usable by SRW_TAC *)
-(* val _ = export_rewrites ["sublist_def"];*)
+val _ = export_rewrites ["sublist_def"];
 val sublist_refl = store_thm(
   "sublist_refl",
   ``!l. sublist l l``,
@@ -97,25 +97,6 @@ val sublist_append1_E = store_thm(
 val append_sublist_1 = save_thm("append_sublist_1", sublist_append1_E);
 
 
-
-val sublist_append = store_thm("sublist_append",
-``!l1 l1' l2 l2'. sublist l1 l1' /\ sublist l2 l2'
-                        ==> sublist (l1 ++ l2) (l1' ++ l2')``,
-cheat
-);
-
-val sublist_append_2 = store_thm("sublist_append_2",
-``!l1 l2 l3. sublist l1 l2
-                        ==> sublist l1 (l2 ++ l3)``,
-cheat
-);
-
-
-val sublist_cons_2 = store_thm("sublist_cons_2",
-``!l1 l2 h. sublist (h::l1) (h::l2)
-                        <=> sublist l1 l2``,
-cheat);
-
 val sublist_cons_exists = store_thm(
   "sublist_cons_exists",
   ``!h l1 l2.
@@ -154,6 +135,23 @@ val sublist_append_both_I = store_thm(
   ``sublist a b /\ sublist c d ==> sublist (a ++ c) (b ++ d)``,
   METIS_TAC [sublist_append_exists]);
 
+
+
+val sublist_append = store_thm("sublist_append",
+``!l1 l1' l2 l2'. sublist l1 l1' /\ sublist l2 l2'
+                        ==> sublist (l1 ++ l2) (l1' ++ l2')``,
+SRW_TAC[][sublist_append_both_I]);
+
+
+val sublist_append_2 = store_thm("sublist_append_2",
+``!l1 l2 l3. sublist l1 l2
+                        ==> sublist l1 (l2 ++ l3)``,
+SRW_TAC[][]
+THEN `sublist [] l3` by SRW_TAC[][sublist_def]
+THEN MP_TAC(sublist_append |> Q.SPECL [`l1`, `l2`, `[]`, `l3`] )
+THEN SRW_TAC[][]);
+
+
 val append_sublist = store_thm("append_sublist",
 ``!l1 l2 l3 l. sublist (l1 ++ l2 ++ l3) l
       	       ==> sublist (l1 ++ l3) l``,
@@ -182,6 +180,17 @@ val sublist_filter = store_thm("sublist_filter",
 
 val sublist_cons_3 = save_thm("sublist_cons_3", sublist_CONS1_E);
 
+
+val sublist_cons_2 = store_thm("sublist_cons_2",
+``!l1 l2 h. sublist (h::l1) (h::l2)
+                        <=> sublist l1 l2``,
+SRW_TAC[][]
+THEN EQ_TAC
+THEN1( SRW_TAC[][sublist_def]
+THEN METIS_TAC[sublist_cons_3])
+THEN1( MP_TAC(sublist_append |> Q.SPECL [`[h]`, `[h]`, `l1`, `l2`] )
+THEN SRW_TAC[][sublist_def]));
+
 val sublist_every = store_thm("sublist_every",
 ``!l1 l2 P. sublist l1 l2 /\ EVERY P l2 ==> EVERY P l1``,
 METIS_TAC[EVERY_MEM, sublist_subset, pred_setTheory.SUBSET_DEF]);
@@ -196,13 +205,19 @@ val _ = export_rewrites ["sublist_SING_MEM"]
 val sublist_every = store_thm("sublist_every",
 ``!l1 l2 P. sublist (l1) (l2) /\ EVERY P l2
                         ==> EVERY P l1 ``,
-cheat);
+Induct_on `l2`
+THEN SRW_TAC[][sublist_def]
+THEN Cases_on `l1`
+THEN SRW_TAC[][sublist_def]
+THEN FULL_SIMP_TAC(bool_ss)[sublist_def]
+THEN FIRST_X_ASSUM (Q.SPECL_THEN [`h'::t`, `P`] MP_TAC)
+THEN SRW_TAC[][]
+);
 
 val sublist_append_exists = store_thm("sublist_append_exists",
-(* this should be replaced with the one above *)
 ``!l1 l2 h. sublist (h::l1) (l2)
                         ==> ?l3 l4. (l2 = l3 ++ [h] ++ l4 ) /\ sublist l1 l4``,
-cheat);
+METIS_TAC[sublist_cons_exists]);
 
 val sublist_append_4 = store_thm("sublist_append_4",
 ``!l l1 l2 h. sublist (h::l) (l1 ++ [h] ++ l2) /\ EVERY (\x. ~(h = x)) l1
