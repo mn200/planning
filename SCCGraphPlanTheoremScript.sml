@@ -49,8 +49,11 @@ val childless_problem_scc_set_def = Define`
 
 val member_leaves_def = Define
      `member_leaves(PROB, S) 
-           = FILTER (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) (SET_TO_LIST S)`;
+           = set (FILTER (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) (SET_TO_LIST S))`;
 
+val scc_lemma_1 = store_thm("scc_lemma_1",
+``!PROB S. FINITE(S) ==> FINITE((member_leaves(PROB, S)))``,
+cheat)
 
 val single_child_parents_def = Define
 `single_child_parents(PROB, vs) 
@@ -109,7 +112,66 @@ val single_child_ancestors_def = tDefine "single_child_ancestors"
 (WF_REL_TAC `measure (CARD o FDOM o (\PROB. PROB.I) o FST)`
 THEN METIS_TAC[single_child_ancestors_def_2]);
 
+val scc_main_lemma_1_1 = store_thm("scc_main_lemma_1_1",
+````,
+cheat)
 
+val scc_main_lemma_1_2 = store_thm("scc_main_lemma_1_2",
+````,
+cheat)
+val scc_main_lemma_1 = store_thm("scc_main_lemma_1",
+``∀s. FINITE s ⇒  
+      ∀S PROB.
+       planning_problem PROB ∧ scc_set (PROB,S) ∧
+       FDOM PROB.I ⊆ BIGUNION S ∧ (S ≠ ∅ ∧ S ≠ {∅}) ∧ FINITE S ∧
+       (s = member_leaves (PROB,S)) ⇒
+       problem_plan_bound PROB ≤
+       sum_scc_parents (PROB,member_leaves (PROB,S))``,
+cheat
+(*
+MATCH_MP_TAC(simpLib.ASM_SIMP_RULE (srw_ss()) [AND_IMP_INTRO]  (FINITE_INDUCT 
+   |> INST_TYPE [alpha |-> ``:'a -> bool``] 
+   |> Q.SPEC `(\s. !S PROB. planning_problem PROB ∧ scc_set (PROB,S) 
+                   ∧ FDOM PROB.I ⊆ BIGUNION S ∧ (BIGUNION S ≠ ∅ ) ∧ FINITE S 
+                   /\ (s = member_leaves(PROB, S)) 
+                   ==> problem_plan_bound PROB ≤ sum_scc_parents (PROB,s))`))
+THEN SRW_TAC[][]
+THENL
+[
+   Q.PAT_ASSUM `EMPTY = x` (ASSUME_TAC o GSYM)
+   THEN SRW_TAC[][]
+   ,
+]
+*)
+)
+
+val scc_main_lemma = store_thm("scc_main_lemma",
+``!S PROB. planning_problem(PROB) /\ scc_set(PROB, S) /\ FDOM PROB.I SUBSET BIGUNION S /\ ~(BIGUNION S = EMPTY)
+           /\ FINITE(S)
+           ==>  problem_plan_bound(PROB) <= sum_scc_parents(PROB, (member_leaves(PROB, S)))``,
+NTAC 2 STRIP_TAC 
+THEN MP_TAC(scc_lemma_1 |> Q.SPECL [`PROB`, `S'`])
+THEN SRW_TAC[][]
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN METIS_TAC [scc_main_lemma_1]
+(*
+THEN   Q.UNDISCH_TAC `FINITE (member_leaves (PROB,S'))`
+   THEN Q.UNDISCH_TAC `planning_problem PROB`
+   THEN Q.UNDISCH_TAC `scc_set (PROB,S')`
+   THEN Q.UNDISCH_TAC `FDOM PROB.I ⊆ BIGUNION S'`
+   THEN Q.UNDISCH_TAC `S' ≠ ∅`
+   THEN Q.UNDISCH_TAC `S' ≠ {∅}`
+   THEN Q.UNDISCH_TAC `FINITE S'`
+THEN REWRITE_TAC[AND_IMP_INTRO, GSYM CONJ_ASSOC]
+THEN Q.SPEC_TAC(`S'`, `S'`)
+THEN Q.SPEC_TAC(`PROB`, `PROB`)
+THEN MATCH_MP_TAC(simpLib.ASM_SIMP_RULE (bool_ss) [AND_IMP_INTRO]((CONV_RULE RIGHT_IMP_FORALL_CONV) (simpLib.ASM_SIMP_RULE (srw_ss()) [AND_IMP_INTRO] (GSYM(FINITE_INDUCT 
+   |> INST_TYPE [alpha |-> ``:'a -> bool``] 
+   |> Q.SPEC `(\s. !S PROB. planning_problem PROB ∧ scc_set (PROB,S) 
+                   ∧ FDOM PROB.I ⊆ BIGUNION S ∧ (BIGUNION S ≠ ∅ ) ∧ FINITE S 
+                   /\ (s = member_leaves(PROB, S)) 
+                   ==> problem_plan_bound PROB ≤ sum_scc_parents (PROB,s))`))))) *)
+);
 
 
 val _ = export_theory();
