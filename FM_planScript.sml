@@ -675,7 +675,6 @@ THEN Cases_on`as`
 THEN1 SRW_TAC[][]
 THEN `plan((PROB with I := (state_succ PROB.I h')), t) ` by METIS_TAC[lemma_1_1]
 THEN Cases_on`slist`
-
 THENL
 [
 	Q.EXISTS_TAC `[]`
@@ -705,7 +704,6 @@ THEN SRW_TAC[][]
 
 val  lemma_2_3_2 = store_thm("lemma_2_3_2",
 ``! l l1 l2. (* l<> [] /\ l2 <> []  /\ *) (LENGTH(l2) > LENGTH(l1)) /\ (l1 <<= l) /\ (l2 <<= l) ==> (l1 <<= l2)``,
-
 Induct_on`l2`
 THEN1 SRW_TAC[ARITH_ss][]
 THEN Induct_on`l1`

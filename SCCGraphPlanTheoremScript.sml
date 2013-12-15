@@ -33,7 +33,7 @@ val scc_set_def = Define
 
 val sum_scc_parents_def 
   = Define` sum_scc_parents(PROB, S) 
-     = SIGMA (\vs. problem_plan_bound((prob_proj(PROB, vs UNION (ancestors(PROB, vs)))))) S`;
+     = SIGMA (\vs. problem_plan_bound((prob_proj(PROB, vs UNION (ancestors(PROB, vs)))))) S + 1`;
 
 val childless_vs_def = Define`
       childless_vs(PROB, vs) = !vs'. DISJOINT vs vs' ==> ~(dep_var_set(PROB, vs, vs'))`
@@ -113,12 +113,14 @@ val single_child_ancestors_def = tDefine "single_child_ancestors"
 THEN METIS_TAC[single_child_ancestors_def_2]);
 
 val scc_main_lemma_1_1 = store_thm("scc_main_lemma_1_1",
-````,
+``!PROB S. FDOM PROB.I SUBSET BIGUNION S /\ scc_set(PROB, S)
+           ==> (childless_problem_scc_set(PROB) = member_leaves(PROB, S))``,
 cheat)
 
 val scc_main_lemma_1_2 = store_thm("scc_main_lemma_1_2",
-````,
+``!PROB. ((FDOM PROB.I = EMPTY) = (childless_problem_scc_set(PROB) = EMPTY))``,
 cheat)
+
 val scc_main_lemma_1 = store_thm("scc_main_lemma_1",
 ``∀s. FINITE s ⇒  
       ∀S PROB.
@@ -127,8 +129,6 @@ val scc_main_lemma_1 = store_thm("scc_main_lemma_1",
        (s = member_leaves (PROB,S)) ⇒
        problem_plan_bound PROB ≤
        sum_scc_parents (PROB,member_leaves (PROB,S))``,
-cheat
-(*
 MATCH_MP_TAC(simpLib.ASM_SIMP_RULE (srw_ss()) [AND_IMP_INTRO]  (FINITE_INDUCT 
    |> INST_TYPE [alpha |-> ``:'a -> bool``] 
    |> Q.SPEC `(\s. !S PROB. planning_problem PROB ∧ scc_set (PROB,S) 
@@ -140,9 +140,18 @@ THENL
 [
    Q.PAT_ASSUM `EMPTY = x` (ASSUME_TAC o GSYM)
    THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_1 |> Q.SPECL [`PROB`,`S'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_2 |> Q.SPEC `PROB`)
+   THEN SRW_TAC[][sum_scc_parents_def, SUM_IMAGE_THM]
+   THEN MP_TAC(bound_main_lemma |> Q.SPEC `PROB`)
+   THEN SRW_TAC[][]
    ,
+   Q.PAT_ASSUM `a INSERT b= x` (ASSUME_TAC o GSYM)
+   THEN SRW_TAC[][]
+   THEN    
 ]
-*)
+
 )
 
 val scc_main_lemma = store_thm("scc_main_lemma",
