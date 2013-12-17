@@ -15,8 +15,6 @@ val _ = new_theory "SCCGraphPlanTheorem";
 
 val dep_tc_def = Define `dep_tc (PROB)   =  TC (\v1' v2'. dep(PROB, v1', v2'))`;
 
-
-
 val ancestors_def = Define
  `ancestors(PROB: 'a problem, vs: ('a -> bool)) = 
     {v: 'a | (?v': 'a. v' IN vs /\ ((dep_tc(PROB)) v v') ) /\ (!v': 'a. v' IN vs ==> ~((dep_tc(PROB)) v' v))}`;
@@ -27,8 +25,9 @@ val scc_def = Define
     = (!v1 v2. v1 IN vs /\ v2 IN vs ==> ((dep_tc(PROB)) v1 v2) /\ ((dep_tc(PROB)) v2 v1))
           /\ (!vs'. DISJOINT vs' vs ==> ~(dep_var_set(PROB, vs, vs')) \/ ~(dep_var_set(PROB, vs', vs)))`;
 
+
 val scc_set_def = Define
-`scc_set(PROB, S) = !vs. vs IN S /\ vs SUBSET FDOM(PROB.I) ==> scc(PROB, vs)`;
+`scc_set(PROB, S) = !vs. vs IN S /\ ~(DISJOINT vs (FDOM(PROB.I))) ==> scc(PROB, vs)`;
 
 
 val sum_scc_parents_def 
@@ -45,15 +44,6 @@ val childless_svs_def = Define`
 
 val childless_problem_scc_set_def = Define`
       childless_problem_scc_set(PROB) = {vs | (scc(PROB, vs)) /\ (childless_vs(PROB, vs))}`;
-
-
-val member_leaves_def = Define
-     `member_leaves(PROB, S) 
-           = set (FILTER (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) (SET_TO_LIST S))`;
-
-val scc_lemma_1 = store_thm("scc_lemma_1",
-``!PROB S. FINITE(S) ==> FINITE((member_leaves(PROB, S)))``,
-cheat)
 
 val single_child_parents_def = Define
 `single_child_parents(PROB, vs) 
@@ -112,6 +102,36 @@ val single_child_ancestors_def = tDefine "single_child_ancestors"
 (WF_REL_TAC `measure (CARD o FDOM o (\PROB. PROB.I) o FST)`
 THEN METIS_TAC[single_child_ancestors_def_2]);
 
+
+val member_leaves_def = Define
+     `member_leaves(PROB, S) 
+           = set (FILTER (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) (SET_TO_LIST S))`;
+
+val problem_wo_vs_ancestors_def = Define
+  `problem_wo_vs_ancestors(PROB, vs) = 
+              prob_proj(PROB, FDOM PROB.I DIFF (vs ∪ BIGUNION (single_child_ancestors (PROB,vs))))`;
+
+val scc_lemma_1_1 = store_thm("scc_lemma_1_1",
+``!PROB S. FINITE(S) ==> FINITE((member_leaves(PROB, S)))``,
+cheat);
+
+val scc_lemma_1_2 = store_thm("scc_lemma_1_2",
+``!PROB vs S. vs IN member_leaves(PROB, S) ==> scc(PROB, vs)``,
+cheat);
+
+val scc_lemma_1_3 = store_thm("scc_lemma_1_3",
+``!PROB vs S. vs IN member_leaves(PROB, S) ==> vs IN S``,
+cheat);
+
+val scc_lemma_1_4 = store_thm("scc_lemma_1_4",
+``!PROB vs S S'. (member_leaves(PROB, S) = vs INSERT S')
+                 ==> (member_leaves(problem_wo_vs_ancestors(PROB, vs), S) = S')``,
+cheat);
+
+val scc_lemma_1_5 = store_thm("scc_lemma_1_5",
+``!PROB vs S. vs IN member_leaves(PROB, S) ==> childless_vs(PROB, vs)``,
+cheat);
+
 val scc_main_lemma_1_1 = store_thm("scc_main_lemma_1_1",
 ``!PROB S. FDOM PROB.I SUBSET BIGUNION S /\ scc_set(PROB, S)
            ==> (childless_problem_scc_set(PROB) = member_leaves(PROB, S))``,
@@ -120,6 +140,34 @@ cheat)
 val scc_main_lemma_1_2 = store_thm("scc_main_lemma_1_2",
 ``!PROB. ((FDOM PROB.I = EMPTY) = (childless_problem_scc_set(PROB) = EMPTY))``,
 cheat)
+
+val scc_main_lemma_1_3 = store_thm("scc_main_lemma_1_3",
+``!PROB S S'. scc_set(PROB, S) /\ S' SUBSET S ==> scc_set(prob_proj(PROB, FDOM(PROB.I) DIFF BIGUNION S'), S)``,
+cheat)
+
+val scc_main_lemma_1_4 = store_thm("scc_main_lemma_1_4",
+``!PROB vs S. scc_set(PROB, S) /\ scc(PROB, vs) /\ FDOM(PROB.I) SUBSET BIGUNION S ==> single_child_ancestors(PROB, vs) SUBSET S``,
+cheat)
+
+val scc_main_lemma_1_5 = store_thm("scc_main_lemma_1_5",
+``!PROB vs vs'. FDOM(PROB.I) SUBSET vs ==> FDOM((prob_proj(PROB, vs')).I) SUBSET vs``,
+cheat)
+
+
+val scc_main_lemma_1_6 = store_thm("scc_main_lemma_1_6",
+``!PROB vs S S'. (member_leaves (PROB,S) = vs INSERT S') /\ ~(vs IN S')
+              ==> (sum_scc_parents(problem_wo_vs_ancestors(PROB, vs)
+                           , member_leaves(problem_wo_vs_ancestors(PROB, vs), S)) = sum_scc_parents(PROB, S'))``,
+cheat)
+
+val scc_main_lemma_1_7 = store_thm("scc_main_lemma_1_7",
+``!PROB vs. childless_vs(PROB, vs) /\ scc(PROB, vs)
+            ==> problem_plan_bound(PROB)
+                   <= problem_plan_bound(problem_wo_vs_ancestors(PROB, vs))
+                           + problem_plan_bound(prob_proj(PROB, vs UNION (ancestors (PROB,vs))))``,
+cheat)
+
+
 
 val scc_main_lemma_1 = store_thm("scc_main_lemma_1",
 ``∀s. FINITE s ⇒  
@@ -149,17 +197,37 @@ THENL
    ,
    Q.PAT_ASSUM `a INSERT b= x` (ASSUME_TAC o GSYM)
    THEN SRW_TAC[][]
-   THEN    
-]
-
-)
+   THEN MP_TAC(scc_lemma_1_2 |> Q.SPECL [`PROB`, `e`, `S'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_4 |> Q.SPECL [`PROB`, `e`, `S'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_5 |> Q.SPEC `PROB` |> Q.SPEC `BIGUNION S'` |> Q.ISPEC `FDOM(PROB.I) DIFF (e UNION BIGUNION (single_child_ancestors (PROB,e)))`)
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_lemma_1_3 |> Q.SPECL[`PROB`, `e`, `S'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_3 |> INST_TYPE[alpha |-> ``:'a`` ] |> Q.SPECL [`PROB`, `S'`, `((e :α -> bool) INSERT (single_child_ancestors (PROB,e)))`])
+   THEN SRW_TAC[][]
+   THEN Q.PAT_ASSUM `!x y. p x y` (Q.SPECL_THEN [`S'`,`(problem_wo_vs_ancestors(PROB, e))`] MP_TAC)
+   THEN SRW_TAC[][graph_plan_lemma_2_2, scc_lemma_1_4, problem_wo_vs_ancestors_def]
+   THEN FULL_SIMP_TAC(srw_ss())[GSYM problem_wo_vs_ancestors_def]
+   THEN MP_TAC(scc_main_lemma_1_6 |> Q.SPECL [`PROB`, `e`,`S'`,`s`])
+   THEN SRW_TAC[][]
+   THEN FULL_SIMP_TAC(bool_ss)[]
+   THEN SRW_TAC[][sum_scc_parents_def, SUM_IMAGE_THM]
+   THEN FULL_SIMP_TAC(bool_ss)[DELETE_NON_ELEMENT]
+   THEN MP_TAC( scc_lemma_1_5 |> Q.SPECL [`PROB`,`e`,`S'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_main_lemma_1_7 |> Q.SPECL [`PROB`, `e`])
+   THEN SRW_TAC[][]
+   THEN FULL_SIMP_TAC(bool_ss)[((sum_scc_parents_def) |> Q.SPECL [`PROB`, `s`])]
+   THEN DECIDE_TAC])
 
 val scc_main_lemma = store_thm("scc_main_lemma",
 ``!S PROB. planning_problem(PROB) /\ scc_set(PROB, S) /\ FDOM PROB.I SUBSET BIGUNION S /\ ~(BIGUNION S = EMPTY)
            /\ FINITE(S)
            ==>  problem_plan_bound(PROB) <= sum_scc_parents(PROB, (member_leaves(PROB, S)))``,
 NTAC 2 STRIP_TAC 
-THEN MP_TAC(scc_lemma_1 |> Q.SPECL [`PROB`, `S'`])
+THEN MP_TAC(scc_lemma_1_1 |> Q.SPECL [`PROB`, `S'`])
 THEN SRW_TAC[][]
 THEN FULL_SIMP_TAC(srw_ss())[]
 THEN METIS_TAC [scc_main_lemma_1]
