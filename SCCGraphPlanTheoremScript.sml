@@ -23,8 +23,9 @@ val ancestors_def = Define
 val scc_def = Define 
 `scc(PROB, vs) 
     = (!v1 v2. v1 IN vs /\ v2 IN vs ==> ((dep_tc(PROB)) v1 v2) /\ ((dep_tc(PROB)) v2 v1))
-          /\ (!vs'. DISJOINT vs' vs ==> ~(dep_var_set(PROB, vs, vs')) \/ ~(dep_var_set(PROB, vs', vs)))`;
-
+          /\ (!vs'. DISJOINT vs' vs ==> ~(dep_var_set(PROB, vs, vs')) \/ ~(dep_var_set(PROB, vs', vs)))
+          /\ ~(vs = EMPTY)`;
+ 
 
 val scc_set_def = Define
 `scc_set(PROB, S) = !vs. vs IN S /\ ~(DISJOINT vs (FDOM(PROB.I))) ==> scc(PROB, vs)`;
@@ -105,7 +106,7 @@ THEN METIS_TAC[single_child_ancestors_def_2]);
 
 val member_leaves_def = Define
      `member_leaves(PROB, S) 
-           = set (FILTER (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) (SET_TO_LIST S))`;
+           =  (\vs. (scc(PROB, vs) /\ childless_vs(PROB, vs))) INTER S`;
 
 val problem_wo_vs_ancestors_def = Define
   `problem_wo_vs_ancestors(PROB, vs) = 
@@ -113,24 +114,27 @@ val problem_wo_vs_ancestors_def = Define
 
 val scc_lemma_1_1 = store_thm("scc_lemma_1_1",
 ``!PROB S. FINITE(S) ==> FINITE((member_leaves(PROB, S)))``,
-cheat);
+SRW_TAC[][member_leaves_def]
+THEN METIS_TAC[FINITE_INTER]);
 
 val scc_lemma_1_2 = store_thm("scc_lemma_1_2",
 ``!PROB vs S. vs IN member_leaves(PROB, S) ==> scc(PROB, vs)``,
-cheat);
+SRW_TAC[][member_leaves_def]);
 
 val scc_lemma_1_3 = store_thm("scc_lemma_1_3",
 ``!PROB vs S. vs IN member_leaves(PROB, S) ==> vs IN S``,
-cheat);
+SRW_TAC[][member_leaves_def]);
+
+
 
 val scc_lemma_1_4 = store_thm("scc_lemma_1_4",
 ``!PROB vs S S'. (member_leaves(PROB, S) = vs INSERT S')
                  ==> (member_leaves(problem_wo_vs_ancestors(PROB, vs), S) = S')``,
-cheat);
+);
 
 val scc_lemma_1_5 = store_thm("scc_lemma_1_5",
 ``!PROB vs S. vs IN member_leaves(PROB, S) ==> childless_vs(PROB, vs)``,
-cheat);
+SRW_TAC[][member_leaves_def]);
 
 val scc_main_lemma_1_1 = store_thm("scc_main_lemma_1_1",
 ``!PROB S. FDOM PROB.I SUBSET BIGUNION S /\ scc_set(PROB, S)
