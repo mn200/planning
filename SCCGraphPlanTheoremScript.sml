@@ -34,7 +34,7 @@ val sum_scc_parents_def
      = SIGMA (\vs. problem_plan_bound((prob_proj(PROB, vs UNION (ancestors(PROB, vs)))))) S + 1`;
 
 val childless_vs_def = Define`
-      childless_vs(PROB, vs) = !vs'. DISJOINT vs vs' ==> ~(dep_var_set(PROB, vs, vs'))`
+      childless_vs(PROB, vs) = !vs'. (* DISJOINT vs vs' ==> *) ~(dep_var_set(PROB, vs, vs'))`
 
 
 val childless_svs_def = Define`
@@ -131,11 +131,62 @@ val scc_lemma_1_3 = store_thm("scc_lemma_1_3",
 SRW_TAC[][member_leaves_def]);
 
 
+val scc_lemma_1_4_1_1 = store_thm("scc_lemma_1_4_1_1",
+``!PROB vs vs'. childless_vs(PROB, vs') /\ DISJOINT vs vs'
+                ==> !vs''. vs'' IN (single_child_ancestors(PROB, vs)) ==> (DISJOINT vs' vs'') ``,
+cheat);
+
+
+val scc_lemma_1_4_1 = store_thm("scc_lemma_1_4_1",
+``!PROB vs vs'. childless_vs(PROB, vs') /\ DISJOINT vs vs'
+                ==> DISJOINT vs' (BIGUNION (single_child_ancestors(PROB, vs)))``,
+SRW_TAC[][]
+THEN METIS_TAC[ scc_lemma_1_4_1_1]);
+
+val scc_lemma_1_4_2 = store_thm("scc_lemma_1_4_2",
+``!PROB vs  S vs'. DISJOINT vs vs' /\ vs' IN (member_leaves(PROB, S))
+                  ==> vs' IN (member_leaves(prob_proj(PROB, FDOM PROB.I DIFF vs), S))``,
+cheat);
+
+val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
+``!PROB vs vs' S. vs SUBSET vs'
+                  ==> ~(vs IN childless_problem_scc_set(prob_proj(PROB, vs)))``,
+cheat);
+
+
+val scc_lemma_1_4_4 = store_thm("scc_lemma_1_4_4",
+``!PROB S. vs SUBSET vs'
+                  ==> ~(vs IN childless_problem_scc_set(prob_proj(PROB, vs)))``,
+cheat);
+
+
+val scc_lemma_1_4_5 = store_thm("scc_lemma_1_4_5",
+``∀PROB vs vs'. scc_vs(PROB, vs) ∧ scc_vs(PROB, vs') ∧ vs ≠ vs' ⇒ DISJOINT vs vs'``,
+cheat
+(*scc_disjoint_lemma*))
+
 
 val scc_lemma_1_4 = store_thm("scc_lemma_1_4",
 ``!S. FINITE S ==> (!PROB vs S'. (member_leaves(PROB, S) = vs INSERT S')
                  ==> (member_leaves(problem_wo_vs_ancestors(PROB, vs), S) = S'))``,
-cheat
+SRW_TAC[][problem_wo_vs_ancestors_def]
+THEN MP_TAC(scc_lemma_1_4_1 |> Q.SPECL[`PROB`, `vs`])
+THEN STRIP_TAC
+THEN `scc_vs(PROB, vs)` by (FULL_SIMP_TAC(srw_ss())[member_leaves_def]
+   THEN `vs IN (λvs. scc_vs (PROB,vs) ∧ childless_vs (PROB,vs)) ∩ S'` by METIS_TAC[IN_DEF, IN_INSERT]
+   THEN FULL_SIMP_TAC(srw_ss())[])
+THEN `!vs'. vs' ∈ (member_leaves (PROB,S')) /\ ~(vs' = vs) ==> DISJOINT vs vs'` by 
+   (REWRITE_TAC[member_leaves_def, INTER_DEF, IN_DEF, GSPEC_ETA]
+   THEN FULL_SIMP_TAC(srw_ss())[GSPEC_ETA]
+   THEN METIS_TAC[scc_lemma_1_4_5])
+
+
+
+THEN MP_TAC(scc_lemma_1_4_2 |> Q.SPECL[`PROB`, `(vs ∪ BIGUNION (single_child_ancestors (PROB,vs)))`, `S'`])
+THEN STRIP_TAC
+
+
+
  (*DB.fetch "-" "single_child_ancestors_ind"
  SRW_TAC[][problem_wo_vs_ancestors_def]
  HO_MATCH_MP_TAC FINITE_INDUCT
