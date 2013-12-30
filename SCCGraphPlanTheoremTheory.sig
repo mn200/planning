@@ -22,6 +22,12 @@ sig
     val scc_lemma_1_2 : thm
     val scc_lemma_1_3 : thm
     val scc_lemma_1_4 : thm
+    val scc_lemma_1_4_1 : thm
+    val scc_lemma_1_4_1_1 : thm
+    val scc_lemma_1_4_2 : thm
+    val scc_lemma_1_4_3 : thm
+    val scc_lemma_1_4_4 : thm
+    val scc_lemma_1_4_5 : thm
     val scc_lemma_1_5 : thm
     val scc_main_lemma : thm
     val scc_main_lemma_1 : thm
@@ -79,8 +85,7 @@ sig
    [childless_vs_def]  Definition
 
       |- ∀PROB vs.
-           childless_vs (PROB,vs) ⇔
-           ∀vs'. DISJOINT vs vs' ⇒ ¬dep_var_set (PROB,vs,vs')
+           childless_vs (PROB,vs) ⇔ ∀vs'. ¬dep_var_set (PROB,vs,vs')
 
    [dep_tc_def]  Definition
 
@@ -171,12 +176,53 @@ sig
 
    [scc_lemma_1_4]  Theorem
 
-      [oracles: cheat] [axioms: ] []
+      [oracles: tactic_failed] [axioms: ] []
       |- ∀S.
            FINITE S ⇒
            ∀PROB vs S'.
              (member_leaves (PROB,S) = vs INSERT S') ⇒
              (member_leaves (problem_wo_vs_ancestors (PROB,vs),S) = S')
+
+   [scc_lemma_1_4_1]  Theorem
+
+      [oracles: DISK_THM, cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           childless_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
+           DISJOINT vs' (BIGUNION (single_child_ancestors (PROB,vs)))
+
+   [scc_lemma_1_4_1_1]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           childless_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
+           ∀vs''.
+             vs'' ∈ single_child_ancestors (PROB,vs) ⇒ DISJOINT vs' vs''
+
+   [scc_lemma_1_4_2]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs S vs'.
+           DISJOINT vs vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
+           vs' ∈ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
+
+   [scc_lemma_1_4_3]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs' S.
+           vs ⊆ vs' ⇒ vs ∉ childless_problem_scc_set (prob_proj (PROB,vs))
+
+   [scc_lemma_1_4_4]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB S.
+           vs ⊆ vs' ⇒ vs ∉ childless_problem_scc_set (prob_proj (PROB,vs))
+
+   [scc_lemma_1_4_5]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           scc_vs (PROB,vs) ∧ scc_vs (PROB,vs') ∧ vs ≠ vs' ⇒
+           DISJOINT vs vs'
 
    [scc_lemma_1_5]  Theorem
 
@@ -184,7 +230,7 @@ sig
 
    [scc_main_lemma]  Theorem
 
-      [oracles: DISK_THM, cheat] [axioms: ] []
+      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
       |- ∀S PROB.
            planning_problem PROB ∧ scc_set (PROB,S) ∧
            FDOM PROB.I ⊆ BIGUNION S ∧ BIGUNION S ≠ ∅ ∧ FINITE S ⇒
@@ -193,7 +239,7 @@ sig
 
    [scc_main_lemma_1]  Theorem
 
-      [oracles: DISK_THM, cheat] [axioms: ] []
+      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
       |- ∀s.
            FINITE s ⇒
            ∀S PROB.
