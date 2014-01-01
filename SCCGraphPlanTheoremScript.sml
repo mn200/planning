@@ -151,17 +151,43 @@ val scc_lemma_1_4_1_1_1 = store_thm("scc_lemma_1_4_1_1_1",
 cheat
 )
 
+val scc_lemma_1_4_1_1_2_1_1_1_1 = store_thm("scc_lemma_1_4_1_1_2_1_1_1_1",
+``!fdom vs v f. ~(v IN vs) /\ FDOM f SUBSET fdom /\ v IN FDOM f
+                ==> v IN FDOM(DRESTRICT f (fdom DIFF vs))``,
+SRW_TAC[][dep_def, prob_proj_def, DIFF_DEF, INTER_DEF, EXTENSION, GSPEC_ETA, DISJOINT_DEF, SUBSET_DEF, FDOM_DRESTRICT])
+
+val scc_lemma_1_4_1_1_2_1_1_1 = store_thm("scc_lemma_1_4_1_1_2_1_1_1",
+``!PROB vs v a. ~(v IN vs) /\ a IN PROB.A /\ planning_problem(PROB)
+                ==> ((v IN FDOM(FST a) ==> v IN FDOM(FST (action_proj(a, FDOM PROB.I DIFF vs))))
+                    /\ (v IN FDOM(SND a) ==> v IN FDOM(SND (action_proj(a, FDOM PROB.I DIFF vs)))))``,
+SRW_TAC[][planning_problem_def, action_proj_def]
+THEN METIS_TAC[scc_lemma_1_4_1_1_2_1_1_1_1])
+
 
 val scc_lemma_1_4_1_1_2_1_1 = store_thm("scc_lemma_1_4_1_1_2_1_1",
-``!PROB  vs vs' v v'. v IN vs' /\ v' IN vs'  /\ DISJOINT vs vs'
+``!PROB  vs vs' v v'. planning_problem(PROB) /\ v IN vs' /\ v' IN vs'  /\ DISJOINT vs vs'
               ==> (dep(PROB, v, v') ==> dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v'))``,
-cheat)
-
+SRW_TAC[][dep_def, prob_proj_def, DIFF_DEF, INTER_DEF, EXTENSION, GSPEC_ETA, DISJOINT_DEF]
+THEN Q.EXISTS_TAC `action_proj(a, FDOM PROB.I DIFF vs)` 
+THEN SRW_TAC[][]
+THENL
+[
+   Q.EXISTS_TAC `a` 
+   THEN SRW_TAC[][action_proj_def, DIFF_DEF, EXTENSION, GSPEC_ETA]
+   ,
+   METIS_TAC[scc_lemma_1_4_1_1_2_1_1_1]
+   ,
+   Q.EXISTS_TAC `a` 
+   THEN SRW_TAC[][action_proj_def, DIFF_DEF, EXTENSION, GSPEC_ETA]
+   ,
+   METIS_TAC[scc_lemma_1_4_1_1_2_1_1_1]
+])
 
 val scc_lemma_1_4_1_1_2_1_2 = store_thm("scc_lemma_1_4_1_1_2_1_2",
 ``!PROB vs v v'. v IN vs /\ v' IN vs  /\ scc_vs(PROB, vs)
               ==> ((\v v'. dep(PROB, v, v') /\ v IN vs /\ v' IN vs)^+ v v')``,
-cheat)
+SRW_TAC[][scc_vs_def]
+THEN METIS_TAC[(scc_tc_inclusion |> Q.ISPEC `(λv1' v2'. dep (PROB,v1',v2'))`)])
 
 val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_2",
 ``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
@@ -181,11 +207,16 @@ THEN METIS_TAC[])
 
 val scc_lemma_1_4_1_1_2_1_4 = store_thm("scc_lemma_1_4_1_1_2_1_4",
 ``!PROB  vs v v'. (dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v') ==> dep(PROB, v, v'))``,
-cheat)
+SRW_TAC[][dep_def, prob_proj_def]
+THEN Q.EXISTS_TAC `a'`
+THEN SRW_TAC[][]
+THEN FULL_SIMP_TAC(bool_ss)[pairTheory.FST, pairTheory.SND, FDOM_DRESTRICT]
+THEN METIS_TAC[INTER_SUBSET, SUBSET_DEF]
+)
 
 
 val scc_lemma_1_4_1_1_2_1 = store_thm("scc_lemma_1_4_1_1_2_1",
-``!PROB vs vs'. scc_vs(PROB, vs') /\ DISJOINT vs vs'
+``!PROB vs vs'. planning_problem(PROB) /\ scc_vs(PROB, vs') /\ DISJOINT vs vs'
                 ==> scc_vs (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')``,
 SRW_TAC[][scc_vs_def, SCC_def]
 THENL

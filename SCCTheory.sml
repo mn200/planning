@@ -12,7 +12,7 @@ struct
   local open listTheory
   in end;
   val _ = Theory.link_parents
-          ("SCC",Arbnum.fromString "1388306230",Arbnum.fromString "727202")
+          ("SCC",Arbnum.fromString "1388583124",Arbnum.fromString "13352")
           [("list",
            Arbnum.fromString "1380541561",
            Arbnum.fromString "111594")];
@@ -62,10 +62,14 @@ struct
   val op scc_disjoint_lemma =
     DT(["DISK_THM"],
        [read"(%10 (|%0. (%9 (|%5. (%9 (|%6. ((%16 ((%13 ((%23 $2) $1)) ((%13 ((%23 $2) $0)) (%27 ((%15 $1) $0))))) ((%19 $1) $0))))))))"])
+  val op scc_tc_inclusion =
+    DT(["cheat"],
+       [read"(%10 (|%0. (%9 (|%5. (%8 (|%2. (%8 (|%3. ((%16 ((%13 ((%21 $1) $2)) ((%13 ((%21 $0) $2)) ((%23 $3) $2)))) (((%24 (|%2. (|%3. ((%13 (($5 $1) $0)) ((%13 ((%21 $1) $4)) ((%21 $0) $4)))))) $1) $0))))))))))"])
   end
   val _ = DB.bindl "SCC"
   [("SCC_def",SCC_def,DB.Def), ("lift_def",lift_def,DB.Def),
-   ("scc_disjoint_lemma",scc_disjoint_lemma,DB.Thm)]
+   ("scc_disjoint_lemma",scc_disjoint_lemma,DB.Thm),
+   ("scc_tc_inclusion",scc_tc_inclusion,DB.Thm)]
 
   local open Portable GrammarSpecials Parse
     fun UTOFF f = Feedback.trace("Parse.unicode_trace_off_complaints",0)f

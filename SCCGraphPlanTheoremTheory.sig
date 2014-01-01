@@ -24,10 +24,18 @@ sig
     val scc_lemma_1_4 : thm
     val scc_lemma_1_4_1 : thm
     val scc_lemma_1_4_1_1 : thm
+    val scc_lemma_1_4_1_1_1 : thm
+    val scc_lemma_1_4_1_1_2 : thm
+    val scc_lemma_1_4_1_1_2_1 : thm
+    val scc_lemma_1_4_1_1_2_1_1 : thm
+    val scc_lemma_1_4_1_1_2_1_1_1 : thm
+    val scc_lemma_1_4_1_1_2_1_1_1_1 : thm
+    val scc_lemma_1_4_1_1_2_1_2 : thm
+    val scc_lemma_1_4_1_1_2_1_4 : thm
+    val scc_lemma_1_4_1_1_2_2 : thm
     val scc_lemma_1_4_2 : thm
     val scc_lemma_1_4_3 : thm
     val scc_lemma_1_4_4 : thm
-    val scc_lemma_1_4_5 : thm
     val scc_lemma_1_5 : thm
     val scc_main_lemma : thm
     val scc_main_lemma_1 : thm
@@ -176,53 +184,112 @@ sig
 
    [scc_lemma_1_4]  Theorem
 
-      [oracles: tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
       |- ∀S.
            FINITE S ⇒
            ∀PROB vs S'.
+             scc_vs (PROB,vs) ∧ vs ∉ S' ∧
              (member_leaves (PROB,S) = vs INSERT S') ⇒
              (member_leaves (problem_wo_vs_ancestors (PROB,vs),S) = S')
 
    [scc_lemma_1_4_1]  Theorem
 
-      [oracles: DISK_THM, cheat] [axioms: ] []
-      |- ∀PROB vs vs'.
-           childless_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
-           DISJOINT vs' (BIGUNION (single_child_ancestors (PROB,vs)))
+      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      |- ∀PROB S vs.
+           scc_vs (PROB,vs) ⇒
+           member_leaves (PROB,S) DELETE vs ⊆
+           member_leaves (problem_wo_vs_ancestors (PROB,vs),S)
 
    [scc_lemma_1_4_1_1]  Theorem
+
+      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      |- ∀PROB vs vs' S.
+           scc_vs (PROB,vs) ∧ vs ≠ vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
+           vs' ∈ member_leaves (problem_wo_vs_ancestors (PROB,vs),S)
+
+   [scc_lemma_1_4_1_1_1]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           childless_vs (PROB,vs') ⇒
+           DISJOINT vs' (BIGUNION (single_child_ancestors (PROB,vs)))
+
+   [scc_lemma_1_4_1_1_2]  Theorem
+
+      [oracles: tactic_failed] [axioms: ] []
+      |- ∀PROB vs vs' S.
+           DISJOINT vs vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
+           vs' ∈ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
+
+   [scc_lemma_1_4_1_1_2_1]  Theorem
+
+      [oracles: DISK_THM, cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           planning_problem PROB ∧ scc_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
+           scc_vs (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')
+
+   [scc_lemma_1_4_1_1_2_1_1]  Theorem
+
+      |- ∀PROB vs vs' v v'.
+           planning_problem PROB ∧ v ∈ vs' ∧ v' ∈ vs' ∧ DISJOINT vs vs' ⇒
+           dep (PROB,v,v') ⇒
+           dep (prob_proj (PROB,FDOM PROB.I DIFF vs),v,v')
+
+   [scc_lemma_1_4_1_1_2_1_1_1]  Theorem
+
+      |- ∀PROB vs v a.
+           v ∉ vs ∧ a ∈ PROB.A ∧ planning_problem PROB ⇒
+           (v ∈ FDOM (FST a) ⇒
+            v ∈ FDOM (FST (action_proj (a,FDOM PROB.I DIFF vs)))) ∧
+           (v ∈ FDOM (SND a) ⇒
+            v ∈ FDOM (SND (action_proj (a,FDOM PROB.I DIFF vs))))
+
+   [scc_lemma_1_4_1_1_2_1_1_1_1]  Theorem
+
+      |- ∀fdom vs v f.
+           v ∉ vs ∧ FDOM f ⊆ fdom ∧ v ∈ FDOM f ⇒
+           v ∈ FDOM (DRESTRICT f (fdom DIFF vs))
+
+   [scc_lemma_1_4_1_1_2_1_2]  Theorem
+
+      |- ∀R R' P.
+           (∀x y.
+              P x ∧ P y ⇒
+              (R x y ⇒ R' x y) ∧ (λx y. R x y ∧ P x ∧ P y)⁺ x y) ⇒
+           ∀x y. P x ∧ P y ⇒ R'⁺ x y
+
+   [scc_lemma_1_4_1_1_2_1_4]  Theorem
+
+      |- ∀PROB vs v v'.
+           dep (prob_proj (PROB,FDOM PROB.I DIFF vs),v,v') ⇒
+           dep (PROB,v,v')
+
+   [scc_lemma_1_4_1_1_2_2]  Theorem
 
       [oracles: cheat] [axioms: ] []
       |- ∀PROB vs vs'.
            childless_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
-           ∀vs''.
-             vs'' ∈ single_child_ancestors (PROB,vs) ⇒ DISJOINT vs' vs''
+           childless_vs (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')
 
    [scc_lemma_1_4_2]  Theorem
 
       [oracles: cheat] [axioms: ] []
-      |- ∀PROB vs S vs'.
-           DISJOINT vs vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
-           vs' ∈ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
+      |- ∀PROB vs vs'' S vs'.
+           vs' ∉ single_child_ancestors (PROB,vs) ∧
+           vs' ∉ member_leaves (PROB,S) DELETE vs'' ∧ vs'' ⊆ vs ⇒
+           vs' ∉ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
 
    [scc_lemma_1_4_3]  Theorem
 
       [oracles: cheat] [axioms: ] []
-      |- ∀PROB vs vs' S.
-           vs ⊆ vs' ⇒ vs ∉ childless_problem_scc_set (prob_proj (PROB,vs))
+      |- ∀PROB vs.
+           single_child_ancestors
+             (PROB,vs ∪ BIGUNION (single_child_ancestors (PROB,vs))) =
+           ∅
 
    [scc_lemma_1_4_4]  Theorem
 
-      [oracles: cheat] [axioms: ] []
-      |- ∀PROB S.
-           vs ⊆ vs' ⇒ vs ∉ childless_problem_scc_set (prob_proj (PROB,vs))
-
-   [scc_lemma_1_4_5]  Theorem
-
-      [oracles: cheat] [axioms: ] []
-      |- ∀PROB vs vs'.
-           scc_vs (PROB,vs) ∧ scc_vs (PROB,vs') ∧ vs ≠ vs' ⇒
-           DISJOINT vs vs'
+      |- ∀s t. (∀x. x ∉ s ⇒ x ∉ t) ⇒ (t DIFF s = ∅)
 
    [scc_lemma_1_5]  Theorem
 

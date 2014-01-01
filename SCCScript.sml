@@ -1,5 +1,6 @@
 open HolKernel Parse boolLib bossLib;
 open pred_setTheory;
+open relationTheory;
 val _ = new_theory "SCC";
 
 
@@ -22,6 +23,50 @@ THEN FULL_SIMP_TAC(bool_ss)[SCC_def]
 THEN `?v. v IN vs /\ ~(v IN vs')` by (FULL_SIMP_TAC(bool_ss)[EXTENSION, IN_DEF] THEN METIS_TAC[])
 THEN METIS_TAC[])
 
+
+
+val scc_tc_inclusion = store_thm("scc_tc_inclusion",
+``!R vs v v'. v IN vs /\ v' IN vs/\ SCC R vs 
+              ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
+cheat
+(* REWRITE_TAC[SCC_def, TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`v`, `v'`] )
+THEN STRIP_TAC
+THEN Q.PAT_ASSUM `∀v v'.
+        v ∈ vs ∧ v' ∉ vs ⇒
+        ¬(∀P.
+            (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
+            P v v') ∨
+        ¬∀P.
+           (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
+           P v' v` (MP_TAC o SIMP_RULE(bool_ss)[NOT_FORALL_THM])
+THEN REPEAT STRIP_TAC
+THEN `R⁺ v v' ∧ R⁺ v' v` by METIS_TAC[]
+THEN `∀v'. v' ∉ vs ⇒ ¬R⁺ v v' ∨ ¬R⁺ v' v` by METIS_TAC[]
+THEN REWRITE_TAC[SCC_def, TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN Q.PAT_ASSUM `∀v v'.
+             v ∈ vs ∧ v' ∈ vs ⇒
+             (∀P.
+                (∀x y. R x y ⇒ P x y) ∧
+                (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
+                P v v') ∧
+             ∀P.
+               (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
+               P v' v` (MP_TAC o Q.SPECL[`v`, `v'`])
+THEN REPEAT STRIP_TAC 
+THEN `(∀P.
+         (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
+         P v v')` by METIS_TAC[]
+THEN 
+METIS_TAC[]
+THEN ASM_SIMP_TAC(bool_ss)[]
+THEN REPEAT STRIP_TAC
+SRW_TAC[][]
+THEN Q.PAT_ASSUM `R⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
+THEN REPEAT STRIP_TAC
+THEN TC_INDUCT *) )
 
 val _ = export_theory();
 
