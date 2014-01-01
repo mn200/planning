@@ -117,6 +117,15 @@ val problem_wo_vs_ancestors_def = Define
 
 
 
+val scc_main_lemma_x = store_thm("scc_main_lemma_x",
+``!s t x. x IN s /\ ~(x IN t) ==> ~(s = t)``,
+METIS_TAC[])
+ 
+val scc_main_lemma_xx = store_thm("scc_main_lemma_1_xx",
+``!PROB vs vs'. scc_vs(PROB, vs) /\ scc_vs(PROB, vs') /\ ~(vs = vs') ==> DISJOINT vs vs'``,
+METIS_TAC[scc_disjoint_lemma, scc_vs_def])
+
+
 val scc_lemma_1_1 = store_thm("scc_lemma_1_1",
 ``!PROB S. FINITE(S) ==> FINITE((member_leaves(PROB, S)))``,
 SRW_TAC[][member_leaves_def]
@@ -130,6 +139,13 @@ val scc_lemma_1_3 = store_thm("scc_lemma_1_3",
 ``!PROB vs S. vs IN member_leaves(PROB, S) ==> vs IN S``,
 SRW_TAC[][member_leaves_def]);
 
+
+
+val scc_lemma_1_5 = store_thm("scc_lemma_1_5",
+``!PROB vs S. vs IN member_leaves(PROB, S) ==> childless_vs(PROB, vs)``,
+SRW_TAC[][member_leaves_def]);
+
+
 val scc_lemma_1_4_1_1_1 = store_thm("scc_lemma_1_4_1_1_1",
 ``!PROB vs vs'. childless_vs(PROB, vs') ==> DISJOINT  vs' (BIGUNION (single_child_ancestors(PROB, vs)))``,
 cheat
@@ -137,29 +153,85 @@ cheat
 
 
 val scc_lemma_1_4_1_1_2_1_1 = store_thm("scc_lemma_1_4_1_1_2_1_1",
-``!PROB v v' vs vs'. v IN vs' /\ v' IN vs'  /\ DISJOINT vs vs'
-              ==> (dep(PROB, v, v') <=> dep(prob_proj(PROB, vs), v, v'))``,
+``!PROB  vs vs' v v'. v IN vs' /\ v' IN vs'  /\ DISJOINT vs vs'
+              ==> (dep(PROB, v, v') ==> dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v'))``,
 cheat)
 
 
 val scc_lemma_1_4_1_1_2_1_2 = store_thm("scc_lemma_1_4_1_1_2_1_2",
-``!PROB v v' vs. v IN vs /\ v' IN vs  /\ scc_vs(PROB, vs) /\ (\v v'. dep(PROB, v, v'))^+ v v'
-              ==> (?v''. v'' IN vs /\ dep(PROB, v, v'') /\ (\v v'. dep(PROB, v, v'))^+ v'' v')``,
+``!PROB vs v v'. v IN vs /\ v' IN vs  /\ scc_vs(PROB, vs)
+              ==> ((\v v'. dep(PROB, v, v') /\ v IN vs /\ v' IN vs)^+ v v')``,
 cheat)
+
+val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_2",
+``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
+              ==> (!x y. P x /\ P y ==> (R'^+ x y))``,
+REWRITE_TAC[TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])
+THEN REPEAT STRIP_TAC
+THEN `(R x y ⇒ R' x y) ∧
+        ∀P'.
+          (∀x y. (λx y. R x y ∧ P x ∧ P y) x y ⇒ P' x y) ∧
+          (∀x y z. P' x y ∧ P' y z ⇒ P' x z) ⇒
+          P' x y` by METIS_TAC[]
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P'`)
+THEN REPEAT STRIP_TAC
+THEN METIS_TAC[])
+
+val scc_lemma_1_4_1_1_2_1_4 = store_thm("scc_lemma_1_4_1_1_2_1_4",
+``!PROB  vs v v'. (dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v') ==> dep(PROB, v, v'))``,
+cheat)
+
 
 val scc_lemma_1_4_1_1_2_1 = store_thm("scc_lemma_1_4_1_1_2_1",
 ``!PROB vs vs'. scc_vs(PROB, vs') /\ DISJOINT vs vs'
                 ==> scc_vs (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')``,
 SRW_TAC[][scc_vs_def, SCC_def]
+THENL
+[
+   MP_TAC(scc_lemma_1_4_1_1_2_1_1 |> Q.SPECL[`PROB`, `vs`, `vs'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(REWRITE_RULE[scc_vs_def, SCC_def] scc_lemma_1_4_1_1_2_1_2 |> Q.SPECL[`PROB`, `vs'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_lemma_1_4_1_1_2_1_3 |> Q.SPECL[`(\v v'. dep(PROB, v, v'))`, 
+                                           `(\v v'. dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v'))`,
+                                           `(\v. v IN vs')`])
+   THEN SRW_TAC[][]
+   ,
+   MP_TAC(scc_lemma_1_4_1_1_2_1_1 |> Q.SPECL[`PROB`, `vs`, `vs'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(REWRITE_RULE[scc_vs_def, SCC_def] scc_lemma_1_4_1_1_2_1_2 |> Q.SPECL[`PROB`, `vs'`])
+   THEN SRW_TAC[][]
+   THEN MP_TAC(scc_lemma_1_4_1_1_2_1_3 |> Q.SPECL[`(\v v'. dep(PROB, v, v'))`, 
+                                           `(\v v'. dep(prob_proj(PROB, FDOM PROB.I DIFF vs), v, v'))`,
+                                           `(\v. v IN vs')`])
+   THEN SRW_TAC[][]
+   ,
+   Q.PAT_ASSUM `!x y. P x y ==> Q x y \/ N x y` (MP_TAC o Q.SPECL[`v`, `v'`])
+   THEN SRW_TAC[][]
+   THENL
+   [
+     `¬(λv1' v2'. dep (prob_proj (PROB,FDOM PROB.I DIFF vs),v1',v2'))⁺ v v'`
+        by(REWRITE_TAC[TC_DEF]
+        THEN SRW_TAC[][]
+        THEN Q.PAT_ASSUM `¬(λv1' v2'. dep (PROB,v1',v2'))⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
+        THEN SRW_TAC[][]
+        THEN Q.EXISTS_TAC `P`
+        THEN METIS_TAC[scc_lemma_1_4_1_1_2_1_4])
+     THEN SRW_TAC[][]
+     ,
+     `¬(λv1' v2'. dep (prob_proj (PROB,FDOM PROB.I DIFF vs),v1',v2'))⁺ v' v`
+        by(REWRITE_TAC[TC_DEF]
+        THEN SRW_TAC[][]
+        THEN Q.PAT_ASSUM `¬(λv1' v2'. dep (PROB,v1',v2'))⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
+        THEN SRW_TAC[][]
+        THEN Q.EXISTS_TAC `P`
+        THEN METIS_TAC[scc_lemma_1_4_1_1_2_1_4])
+     THEN SRW_TAC[][]
+   ]
+])
 
-
-, prob_proj_def, DIFF_DEF, INTER_DEF, IN_DEF, GSPEC_ETA, DISJOINT_DEF, EXTENSION, dep_def]
-
-THEN MP_TAC( REWRITE_RULE [GSPEC_ETA] (REWRITE_RULE[ INTER_DEF, GSPEC_ETA, IN_DEF, FEMPTY_DEF, EXTENSION, FDOM_DRESTRICT] DRESTRICT_DEF))
-THEN SRW_TAC[][GSPEC_ETA]
-THEN FULL_SIMP_TAC(bool_ss)[TC_DEF]
-THEN METIS_TAC[TC_DEF]
-)
 
 val scc_lemma_1_4_1_1_2_2 = store_thm("scc_lemma_1_4_1_1_2_2",
 ``!PROB vs vs'. childless_vs(PROB, vs') /\ DISJOINT vs vs'
@@ -186,7 +258,7 @@ THEN REWRITE_TAC[problem_wo_vs_ancestors_def]
 THEN METIS_TAC[scc_lemma_1_4_1_1_2,  GSYM DISJOINT_UNION, DISJOINT_SYM])
 
 val scc_lemma_1_4_1 = store_thm("scc_lemma_1_4_1",
-``!PROB S vs. (member_leaves(PROB, S) DELETE vs) 
+``!PROB S vs. scc_vs(PROB, vs) ==> (member_leaves(PROB, S) DELETE vs) 
 SUBSET (member_leaves(problem_wo_vs_ancestors(PROB, vs), S))``,
 SRW_TAC[][scc_lemma_1_4_1_1, Once (GSYM IN_DELETE), SUBSET_DEF]
 );
@@ -210,7 +282,7 @@ SRW_TAC[][IN_DEF, DIFF_DEF, GSPEC_ETA, EXTENSION]
 THEN METIS_TAC[]);
 
 val scc_lemma_1_4 = store_thm("scc_lemma_1_4",
-``!S. FINITE S ==> (!PROB vs S'. ~(vs IN S') /\ (member_leaves(PROB, S) = vs INSERT S')
+``!S. FINITE S ==> (!PROB vs S'. scc_vs(PROB, vs) /\ ~(vs IN S') /\ (member_leaves(PROB, S) = vs INSERT S')
                  ==> (member_leaves(problem_wo_vs_ancestors(PROB, vs), S) = S'))``,
 SRW_TAC[][]
 THEN Q.PAT_ASSUM `member_leaves (PROB,S') = vs INSERT S''` (ASSUME_TAC o GSYM)
@@ -251,11 +323,6 @@ THEN SRW_TAC[][]
 THEN Q.PAT_ASSUM `vs INSERT S'' = member_leaves (PROB,S')` (ASSUME_TAC o GSYM)
 THEN FULL_SIMP_TAC(bool_ss)[DELETE_INSERT]);
 
-
-val scc_lemma_1_5 = store_thm("scc_lemma_1_5",
-``!PROB vs S. vs IN member_leaves(PROB, S) ==> childless_vs(PROB, vs)``,
-SRW_TAC[][member_leaves_def]);
-
 val scc_main_lemma_1_1_1_1_1_1 = store_thm("scc_main_lemma_1_1_1_1_1_1",
 ``!PROB v1 v2. planning_problem(PROB) /\ dep(PROB, v1, v2)
                ==> (v1 IN FDOM(PROB.I) /\ v2 IN FDOM(PROB.I))``,
@@ -275,16 +342,6 @@ val scc_main_lemma_1_1_1_1 = store_thm("scc_main_lemma_1_1_1_1",
 SRW_TAC[][scc_vs_def, SCC_def]
 THEN REWRITE_TAC[SUBSET_DEF]
 THEN METIS_TAC[scc_main_lemma_1_1_1_1_1, dep_tc_def])
-
-
-
-val scc_main_lemma_x = store_thm("scc_main_lemma_x",
-``!s t x. x IN s /\ ~(x IN t) ==> ~(s = t)``,
-METIS_TAC[])
- 
-val scc_main_lemma_xx = store_thm("scc_main_lemma_1_xx",
-``!PROB vs vs'. scc_vs(PROB, vs) /\ scc_vs(PROB, vs') /\ ~(vs = vs') ==> DISJOINT vs vs'``,
-METIS_TAC[scc_disjoint_lemma, scc_vs_def])
 
 
 val scc_main_lemma_1_1_1_2 = store_thm("scc_main_lemma_1_1_1_2",
