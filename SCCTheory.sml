@@ -12,10 +12,10 @@ struct
   local open listTheory
   in end;
   val _ = Theory.link_parents
-          ("SCC",Arbnum.fromString "1388650845",Arbnum.fromString "837346")
+          ("SCC",Arbnum.fromString "1388659372",Arbnum.fromString "632953")
           [("list",
-           Arbnum.fromString "1378778539",
-           Arbnum.fromString "899441")];
+           Arbnum.fromString "1380541561",
+           Arbnum.fromString "111594")];
   val _ = Theory.incorporate_types "SCC" [];
 
   val idvector = 

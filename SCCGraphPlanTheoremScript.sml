@@ -348,6 +348,20 @@ val scc_lemma_1_4_2 = store_thm("scc_lemma_1_4_2",
                        ==> ~(vs' IN (member_leaves(prob_proj(PROB, (FDOM PROB.I) DIFF vs), S)))``,
 cheat);
 
+val scc_lemma_1_4_3_1 = store_thm("scc_lemma_1_4_3_1",
+``!PROB vs vs' vs''. (\vs vs'. dep_var_set (PROB,vs,vs'))^+ vs (vs' ∪ vs'')
+         ==> ((\vs vs'. dep_var_set (PROB,vs,vs'))^+ vs vs') 
+             \/ ((\vs vs'. dep_var_set (PROB,vs,vs'))^+ vs vs'')``,
+cheat);
+
+
+val scc_lemma_1_4_3_2 = store_thm("scc_lemma_1_4_3_2",
+``!PROB vs S. (\vs vs'. dep_var_set (PROB,vs,vs'))^+ vs (BIGUNION S)
+         ==> ?vs'. vs' IN S /\ (\vs vs'. dep_var_set (PROB,vs,vs'))^+ vs vs'``,
+cheat);
+
+
+
 val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
 ``!PROB vs. (single_child_ancestors PROB (vs 
                            UNION BIGUNION 
@@ -355,7 +369,19 @@ val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
 (* SRW_TAC[][Once single_child_ancestors_def]
 THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
 THEN FULL_SIMP_TAC(srw_ss())[Once EXTENSION, GSPEC_ETA]
-THEN F *)
+THEN `(λvs vs'. dep_var_set (PROB,vs,vs'))⁺ x vs ∨
+            (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ x
+   (BIGUNION (single_child_ancestors PROB vs))` by 
+       METIS_TAC[(scc_lemma_1_4_3_1 
+                  |> Q.SPECL [`PROB`, `x`, `vs`,
+                              `BIGUNION (single_child_ancestors PROB vs)`])]
+THENL
+[
+   
+   ,
+]
+THEN STRIP_TAC
+THEN ASM_SIMP_TAC(bool_ss)[]*)
 cheat);
 
 

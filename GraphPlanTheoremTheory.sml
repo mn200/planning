@@ -13,14 +13,14 @@ struct
   in end;
   val _ = Theory.link_parents
           ("GraphPlanTheorem",
-          Arbnum.fromString "1388650833",
-          Arbnum.fromString "526996")
+          Arbnum.fromString "1388659352",
+          Arbnum.fromString "475987")
           [("utils",
-           Arbnum.fromString "1388650831",
-           Arbnum.fromString "329543"),
+           Arbnum.fromString "1388659348",
+           Arbnum.fromString "734677"),
            ("FM_plan",
-           Arbnum.fromString "1388650828",
-           Arbnum.fromString "824480")];
+           Arbnum.fromString "1388659345",
+           Arbnum.fromString "616372")];
   val _ = Theory.incorporate_types "GraphPlanTheorem" [];
 
   val idvector = 
