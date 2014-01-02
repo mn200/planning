@@ -13,7 +13,7 @@ sig
     val problem_wo_vs_ancestors_def : thm
     val scc_set_def : thm
     val scc_vs_def : thm
-    val single_child_ancestors_primitive_def : thm
+    val single_child_ancestors_def : thm
     val single_child_parents_def : thm
     val sum_scc_parents_def : thm
 
@@ -33,6 +33,9 @@ sig
     val scc_lemma_1_4_1_1_2_1_2 : thm
     val scc_lemma_1_4_1_1_2_1_4 : thm
     val scc_lemma_1_4_1_1_2_2 : thm
+    val scc_lemma_1_4_1_1_2_2_1 : thm
+    val scc_lemma_1_4_1_1_2_2_1_1 : thm
+    val scc_lemma_1_4_1_1_2_2_1_1_1 : thm
     val scc_lemma_1_4_2 : thm
     val scc_lemma_1_4_3 : thm
     val scc_lemma_1_4_4 : thm
@@ -59,11 +62,6 @@ sig
     val scc_main_lemma_1_7 : thm
     val scc_main_lemma_1_xx : thm
     val scc_main_lemma_x : thm
-    val single_child_ancestors_def : thm
-    val single_child_ancestors_def_1 : thm
-    val single_child_ancestors_def_2 : thm
-    val single_child_ancestors_def_2_1 : thm
-    val single_child_ancestors_ind : thm
 
   val SCCGraphPlanTheorem_grammars : type_grammar.grammar * term_grammar.grammar
 (*
@@ -116,7 +114,7 @@ sig
            prob_proj
              (PROB,
               FDOM PROB.I DIFF
-              (vs ∪ BIGUNION (single_child_ancestors (PROB,vs))))
+              (vs ∪ BIGUNION (single_child_ancestors PROB vs)))
 
    [scc_set_def]  Definition
 
@@ -128,29 +126,14 @@ sig
 
       |- ∀PROB vs. scc_vs (PROB,vs) ⇔ SCC (λv1' v2'. dep (PROB,v1',v2')) vs
 
-   [single_child_ancestors_primitive_def]  Definition
+   [single_child_ancestors_def]  Definition
 
-      |- single_child_ancestors =
-         WFREC
-           (@R.
-              WF R ∧
-              ∀PROB vs vs'.
-                (vs ⊆ FDOM PROB.I ∧ vs ≠ ∅) ∧
-                vs' ∈ single_child_parents (PROB,vs) ⇒
-                R (prob_proj (PROB,FDOM PROB.I DIFF vs),vs') (PROB,vs))
-           (λsingle_child_ancestors a.
-              case a of
-                (PROB,vs) =>
-                  I
-                    (if vs ⊆ FDOM PROB.I ∧ vs ≠ ∅ then
-                       single_child_parents (PROB,vs) ∪
-                       BIGUNION
-                         (IMAGE
-                            (λvs'.
-                               single_child_ancestors
-                                 (prob_proj (PROB,FDOM PROB.I DIFF vs),
-                                  vs')) (single_child_parents (PROB,vs)))
-                     else ∅))
+      |- ∀PROB vs.
+           single_child_ancestors PROB vs =
+           {vs' |
+            scc_vs (PROB,vs') ∧
+            (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs' vs ∧
+            ∃vs'''. ∀vs''. dep_var_set (PROB,vs',vs'') ⇒ (vs'' = vs''')}
 
    [single_child_parents_def]  Definition
 
@@ -184,41 +167,42 @@ sig
 
    [scc_lemma_1_4]  Theorem
 
-      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀S.
            FINITE S ⇒
            ∀PROB vs S'.
-             scc_vs (PROB,vs) ∧ vs ∉ S' ∧
+             planning_problem PROB ∧ scc_vs (PROB,vs) ∧ vs ∉ S' ∧
              (member_leaves (PROB,S) = vs INSERT S') ⇒
              (member_leaves (problem_wo_vs_ancestors (PROB,vs),S) = S')
 
    [scc_lemma_1_4_1]  Theorem
 
-      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀PROB S vs.
-           scc_vs (PROB,vs) ⇒
+           planning_problem PROB ∧ scc_vs (PROB,vs) ⇒
            member_leaves (PROB,S) DELETE vs ⊆
            member_leaves (problem_wo_vs_ancestors (PROB,vs),S)
 
    [scc_lemma_1_4_1_1]  Theorem
 
-      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀PROB vs vs' S.
-           scc_vs (PROB,vs) ∧ vs ≠ vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
+           planning_problem PROB ∧ scc_vs (PROB,vs) ∧ vs ≠ vs' ∧
+           vs' ∈ member_leaves (PROB,S) ⇒
            vs' ∈ member_leaves (problem_wo_vs_ancestors (PROB,vs),S)
 
    [scc_lemma_1_4_1_1_1]  Theorem
 
-      [oracles: cheat] [axioms: ] []
       |- ∀PROB vs vs'.
-           childless_vs (PROB,vs') ⇒
-           DISJOINT vs' (BIGUNION (single_child_ancestors (PROB,vs)))
+           scc_vs (PROB,vs') ∧ childless_vs (PROB,vs') ⇒
+           DISJOINT vs' (BIGUNION (single_child_ancestors PROB vs))
 
    [scc_lemma_1_4_1_1_2]  Theorem
 
-      [oracles: tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀PROB vs vs' S.
-           DISJOINT vs vs' ∧ vs' ∈ member_leaves (PROB,S) ⇒
+           planning_problem PROB ∧ DISJOINT vs vs' ∧
+           vs' ∈ member_leaves (PROB,S) ⇒
            vs' ∈ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
 
    [scc_lemma_1_4_1_1_2_1]  Theorem
@@ -266,16 +250,33 @@ sig
 
    [scc_lemma_1_4_1_1_2_2]  Theorem
 
-      [oracles: cheat] [axioms: ] []
       |- ∀PROB vs vs'.
-           childless_vs (PROB,vs') ∧ DISJOINT vs vs' ⇒
+           childless_vs (PROB,vs') ⇒
            childless_vs (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')
+
+   [scc_lemma_1_4_1_1_2_2_1]  Theorem
+
+      |- ∀PROB vs vs' vs''.
+           ¬dep_var_set (PROB,vs,vs') ⇒
+           ¬dep_var_set (prob_proj (PROB,vs''),vs,vs')
+
+   [scc_lemma_1_4_1_1_2_2_1_1]  Theorem
+
+      |- ∀a v vs.
+           (v ∉ FDOM (FST a) ⇒ v ∉ FDOM (FST (action_proj (a,vs)))) ∧
+           (v ∉ FDOM (SND a) ⇒ v ∉ FDOM (SND (action_proj (a,vs))))
+
+   [scc_lemma_1_4_1_1_2_2_1_1_1]  Theorem
+
+      |- ∀a vs.
+           FDOM (FST (action_proj (a,vs))) ⊆ FDOM (FST a) ∧
+           FDOM (SND (action_proj (a,vs))) ⊆ FDOM (SND a)
 
    [scc_lemma_1_4_2]  Theorem
 
       [oracles: cheat] [axioms: ] []
       |- ∀PROB vs vs'' S vs'.
-           vs' ∉ single_child_ancestors (PROB,vs) ∧
+           vs' ∉ single_child_ancestors PROB vs ∧
            vs' ∉ member_leaves (PROB,S) DELETE vs'' ∧ vs'' ⊆ vs ⇒
            vs' ∉ member_leaves (prob_proj (PROB,FDOM PROB.I DIFF vs),S)
 
@@ -283,8 +284,8 @@ sig
 
       [oracles: cheat] [axioms: ] []
       |- ∀PROB vs.
-           single_child_ancestors
-             (PROB,vs ∪ BIGUNION (single_child_ancestors (PROB,vs))) =
+           single_child_ancestors PROB
+             (vs ∪ BIGUNION (single_child_ancestors PROB vs)) =
            ∅
 
    [scc_lemma_1_4_4]  Theorem
@@ -297,7 +298,7 @@ sig
 
    [scc_main_lemma]  Theorem
 
-      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀S PROB.
            planning_problem PROB ∧ scc_set (PROB,S) ∧
            FDOM PROB.I ⊆ BIGUNION S ∧ BIGUNION S ≠ ∅ ∧ FINITE S ⇒
@@ -306,7 +307,7 @@ sig
 
    [scc_main_lemma_1]  Theorem
 
-      [oracles: DISK_THM, cheat, tactic_failed] [axioms: ] []
+      [oracles: DISK_THM, cheat] [axioms: ] []
       |- ∀s.
            FINITE s ⇒
            ∀S PROB.
@@ -410,7 +411,7 @@ sig
       [oracles: cheat] [axioms: ] []
       |- ∀PROB vs S.
            scc_set (PROB,S) ∧ scc_vs (PROB,vs) ∧ FDOM PROB.I ⊆ BIGUNION S ⇒
-           single_child_ancestors (PROB,vs) ⊆ S
+           single_child_ancestors PROB vs ⊆ S
 
    [scc_main_lemma_1_5]  Theorem
 
@@ -446,47 +447,6 @@ sig
    [scc_main_lemma_x]  Theorem
 
       |- ∀s t x. x ∈ s ∧ x ∉ t ⇒ s ≠ t
-
-   [single_child_ancestors_def]  Theorem
-
-      |- ∀vs PROB.
-           single_child_ancestors (PROB,vs) =
-           if vs ⊆ FDOM PROB.I ∧ vs ≠ ∅ then
-             single_child_parents (PROB,vs) ∪
-             BIGUNION
-               (IMAGE
-                  (λvs'.
-                     single_child_ancestors
-                       (prob_proj (PROB,FDOM PROB.I DIFF vs),vs'))
-                  (single_child_parents (PROB,vs)))
-           else ∅
-
-   [single_child_ancestors_def_1]  Theorem
-
-      [oracles: cheat] [axioms: ] []
-      |- WF (λx y. CARD (FDOM (FST x).I) < CARD (FDOM (FST y).I))
-
-   [single_child_ancestors_def_2]  Theorem
-
-      |- ∀PROB vs vs'.
-           vs ⊆ FDOM PROB.I ∧ vs ≠ ∅ ⇒
-           CARD (FDOM (prob_proj (PROB,FDOM PROB.I DIFF vs)).I) <
-           CARD (FDOM PROB.I)
-
-   [single_child_ancestors_def_2_1]  Theorem
-
-      |- ∀s t. FINITE s ∧ FINITE t ∧ s ⊆ t ⇒ (t ∩ (t DIFF s) = t DIFF s)
-
-   [single_child_ancestors_ind]  Theorem
-
-      |- ∀P.
-           (∀PROB vs.
-              (∀vs'.
-                 (vs ⊆ FDOM PROB.I ∧ vs ≠ ∅) ∧
-                 vs' ∈ single_child_parents (PROB,vs) ⇒
-                 P (prob_proj (PROB,FDOM PROB.I DIFF vs),vs')) ⇒
-              P (PROB,vs)) ⇒
-           ∀v v1. P (v,v1)
 
 
 *)

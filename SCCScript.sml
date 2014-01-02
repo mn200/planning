@@ -30,25 +30,39 @@ val scc_tc_inclusion = store_thm("scc_tc_inclusion",
               ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
 
 cheat
-(* REWRITE_TAC[SCC_def, TC_DEF]
-THEN REPEAT STRIP_TAC
-THEN `∀v v'.
-        v ∈ vs ∧ v' ∈ vs ⇒
-        (∀P.
-           (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-           P v v')` by PROVE_TAC[]
+(* REWRITE_TAC[SCC_def], TC_DEF]
+THEN SRW_TAC[][]
+THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
+THEN FULL_SIMP_TAC(bool_ss)[Once TC_DEF]
+THEN FULL_SIMP_TAC(bool_ss)[Once TC_DEF]
+
+
+
 THEN `!P. ∀v v'.
         v ∈ vs ∧ v' ∈ vs ⇒
         ((∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
            P v v')` by PROVE_TAC[]
+
 THEN FIRST_X_ASSUM (MP_TAC o REWRITE_RULE[AND_IMP_INTRO] o Q.SPEC `P`)
 THEN REPEAT STRIP_TAC
 THEN `∀v v'.
              (v ∈ vs ∧ v' ∈ vs) ∧ (∀x y. R x y ⇒ P x y) ⇒
              P v v'` by METIS_TAC[]
+
+
 THEN Q.PAT_ASSUM `∀x y. (λv v'. R v v' ∧ v ∈ vs ∧ v' ∈ vs) x y ⇒ P x y` (MP_TAC o SIMP_RULE(srw_ss())[])
 THEN REPEAT STRIP_TAC
+THEN `∀v v'.
+        (v ∈ vs ∧ v' ∈ vs) ∧ (∀x y. R x y ⇒ P x y) ⇒
+        P v v'` by PROVE_TAC[]
+THEN 
+
+
+
 THEN FIRST_X_ASSUM MATCH_MP_TAC
+
+
+
 THEN LAST_ASSUM (MP_TAC o Q.SPECL[`v`, `v'`] )
 THEN STRIP_TAC
 THEN Q.PAT_ASSUM `∀v v'.
