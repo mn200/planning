@@ -13,11 +13,11 @@ struct
   in end;
   val _ = Theory.link_parents
           ("FM_plan",
-          Arbnum.fromString "1388649607",
-          Arbnum.fromString "497914")
+          Arbnum.fromString "1388650828",
+          Arbnum.fromString "824480")
           [("sublist",
-           Arbnum.fromString "1388649604",
-           Arbnum.fromString "553261"),
+           Arbnum.fromString "1388650826",
+           Arbnum.fromString "145741"),
            ("finite_map",
            Arbnum.fromString "1378778625",
            Arbnum.fromString "519479")];

@@ -12,7 +12,9 @@ struct
   local open listTheory
   in end;
   val _ = Theory.link_parents
-          ("utils",Arbnum.fromString "1388649610",Arbnum.fromString "5187")
+          ("utils",
+          Arbnum.fromString "1388650831",
+          Arbnum.fromString "329543")
           [("list",
            Arbnum.fromString "1378778539",
            Arbnum.fromString "899441")];

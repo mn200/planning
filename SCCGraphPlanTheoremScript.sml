@@ -343,15 +343,19 @@ SRW_TAC[][scc_lemma_1_4_1_1, Once (GSYM IN_DELETE), SUBSET_DEF]
 );
 
 val scc_lemma_1_4_2 = store_thm("scc_lemma_1_4_2",
-``!PROB vs vs'' S vs'. ~(vs' IN single_child_ancestors PROB vs) /\ ~(vs' IN (member_leaves(PROB, S) DELETE vs'')) /\ vs'' SUBSET vs
-                  ==> ~(vs' IN 
-                         (member_leaves(prob_proj(PROB, (FDOM PROB.I) DIFF vs), S)))``,
+``!PROB vs vs'' S vs'. ~(vs' IN single_child_ancestors PROB vs) /\ ~(vs' IN (member_leaves(PROB, S) DELETE vs'')) 
+                       /\ vs'' SUBSET vs
+                       ==> ~(vs' IN (member_leaves(prob_proj(PROB, (FDOM PROB.I) DIFF vs), S)))``,
 cheat);
 
 val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
 ``!PROB vs. (single_child_ancestors PROB (vs 
                            UNION BIGUNION 
                                  (single_child_ancestors PROB vs))) = EMPTY``,
+(* SRW_TAC[][Once single_child_ancestors_def]
+THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
+THEN FULL_SIMP_TAC(srw_ss())[Once EXTENSION, GSPEC_ETA]
+THEN F *)
 cheat);
 
 
