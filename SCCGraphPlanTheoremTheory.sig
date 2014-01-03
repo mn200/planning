@@ -38,6 +38,8 @@ sig
     val scc_lemma_1_4_1_1_2_2_1_1_1 : thm
     val scc_lemma_1_4_2 : thm
     val scc_lemma_1_4_3 : thm
+    val scc_lemma_1_4_3_1 : thm
+    val scc_lemma_1_4_3_2 : thm
     val scc_lemma_1_4_4 : thm
     val scc_lemma_1_5 : thm
     val scc_main_lemma : thm
@@ -287,6 +289,21 @@ sig
            single_child_ancestors PROB
              (vs ∪ BIGUNION (single_child_ancestors PROB vs)) =
            ∅
+
+   [scc_lemma_1_4_3_1]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs' vs''.
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs (vs' ∪ vs'') ⇒
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs' ∨
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs''
+
+   [scc_lemma_1_4_3_2]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs S.
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs (BIGUNION S) ⇒
+           ∃vs'. vs' ∈ S ∧ (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs'
 
    [scc_lemma_1_4_4]  Theorem
 
