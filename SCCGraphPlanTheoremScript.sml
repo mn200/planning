@@ -458,6 +458,10 @@ SRW_TAC[][single_child_ancestors_def]
 THENL
 [
    FULL_SIMP_TAC(srw_ss())[dep_var_set_def]
+   THEN FULL_SIMP_TAC(srw_ss())[SUBSET_DEF, DISJOINT_DEF, EXTENSION]
+   THEN METIS_TAC[]
+   ,
+   
    ,
 ]*)
 )
