@@ -40,6 +40,11 @@ sig
     val scc_lemma_1_4_3 : thm
     val scc_lemma_1_4_3_1 : thm
     val scc_lemma_1_4_3_2 : thm
+    val scc_lemma_1_4_3_3 : thm
+    val scc_lemma_1_4_3_4 : thm
+    val scc_lemma_1_4_3_4_1 : thm
+    val scc_lemma_1_4_3_5 : thm
+    val scc_lemma_1_4_3_6 : thm
     val scc_lemma_1_4_4 : thm
     val scc_lemma_1_5 : thm
     val scc_main_lemma : thm
@@ -135,7 +140,10 @@ sig
            {vs' |
             scc_vs (PROB,vs') ∧
             (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs' vs ∧
-            ∃vs'''. ∀vs''. dep_var_set (PROB,vs',vs'') ⇒ (vs'' = vs''')}
+            ∀vs''.
+              (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs' vs'' ∧
+              childless_vs (PROB,vs'') ∧ scc_vs (PROB,vs'') ⇒
+              (vs'' = vs)}
 
    [single_child_parents_def]  Definition
 
@@ -286,9 +294,10 @@ sig
 
       [oracles: cheat] [axioms: ] []
       |- ∀PROB vs.
-           single_child_ancestors PROB
-             (vs ∪ BIGUNION (single_child_ancestors PROB vs)) =
-           ∅
+           scc_vs (PROB,vs) ⇒
+           (single_child_ancestors PROB
+              (vs ∪ BIGUNION (single_child_ancestors PROB vs)) =
+            ∅)
 
    [scc_lemma_1_4_3_1]  Theorem
 
@@ -304,6 +313,41 @@ sig
       |- ∀PROB vs S.
            (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs (BIGUNION S) ⇒
            ∃vs'. vs' ∈ S ∧ (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs'
+
+   [scc_lemma_1_4_3_3]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs.
+           ¬childless_vs (PROB,vs) ⇒ (single_child_ancestors PROB vs = ∅)
+
+   [scc_lemma_1_4_3_4]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           scc_vs (PROB,vs) ∧ vs' ∈ single_child_ancestors PROB vs ⇒
+           DISJOINT vs vs' ∧ vs' ≠ ∅
+
+   [scc_lemma_1_4_3_4_1]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs' ⇒
+           DISJOINT vs vs' ∨ (vs = vs') ∧ ¬scc_vs (PROB,vs)
+
+   [scc_lemma_1_4_3_5]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs vs'.
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs
+             (vs' ∪ BIGUNION (single_child_ancestors PROB vs')) ⇒
+           (λvs vs'. dep_var_set (PROB,vs,vs'))⁺ vs vs'
+
+   [scc_lemma_1_4_3_6]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀PROB vs.
+           single_child_ancestors PROB vs ≠ ∅ ⇒
+           BIGUNION (single_child_ancestors PROB vs) ≠ ∅
 
    [scc_lemma_1_4_4]  Theorem
 

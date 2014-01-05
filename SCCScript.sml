@@ -100,5 +100,12 @@ THEN Q.PAT_ASSUM `R⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
 THEN REPEAT STRIP_TAC
 THEN TC_INDUCT *) )
 
+
+val SCC_loop_contradict = store_thm("SCC_loop_contradict",
+``!R vs vs'. (lift R)^+ vs vs' /\ (lift R)^+ vs' vs
+             ==> ~(SCC R vs) /\ ~(SCC R vs')``,
+cheat)
+
+
 val _ = export_theory();
 
