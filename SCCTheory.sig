@@ -7,6 +7,7 @@ sig
     val lift_def : thm
 
   (*  Theorems  *)
+    val SCC_loop_contradict : thm
     val scc_disjoint_lemma : thm
     val scc_tc_inclusion : thm
 
@@ -24,6 +25,12 @@ sig
    [lift_def]  Definition
 
       |- ∀R vs vs'. lift R vs vs' ⇔ ∃v v'. v ∈ vs ∧ v' ∈ vs' ⇒ R v v'
+
+   [SCC_loop_contradict]  Theorem
+
+      [oracles: cheat] [axioms: ] []
+      |- ∀R vs vs'.
+           (lift R)⁺ vs vs' ∧ (lift R)⁺ vs' vs ⇒ ¬SCC R vs ∧ ¬SCC R vs'
 
    [scc_disjoint_lemma]  Theorem
 

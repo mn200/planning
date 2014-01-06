@@ -219,7 +219,7 @@ val scc_lemma_1_4_1_1_2_1_2 = store_thm("scc_lemma_1_4_1_1_2_1_2",
 SRW_TAC[][scc_vs_def]
 THEN METIS_TAC[(scc_tc_inclusion |> Q.ISPEC `(λv1' v2'. dep (PROB,v1',v2'))`)])
 
-val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_2",
+val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_3",
 ``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
               ==> (!x y. P x /\ P y ==> (R'^+ x y))``,
 REWRITE_TAC[TC_DEF]
@@ -381,12 +381,58 @@ SRW_TAC[][prob_proj_def, FDOM_DRESTRICT]
 THEN METIS_TAC[scc_lemma_1_4_2_1_1_1_2_1])
 
 
+val scc_lemma_1_4_2_1_1_1_3 = store_thm("scc_lemma_1_4_2_1_1_1_3",
+``!R R' P P'. (!x y. P x /\ P' y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P' y)^+ x y)) 
+              ==> (!x y. P x /\ P' y ==> (R'^+ x y))``,
+REWRITE_TAC[TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])
+THEN REPEAT STRIP_TAC
+THEN `(R x y ⇒ R' x y) ∧
+      ∀P''.
+        (∀x y. (λx y. R x y ∧ P x ∧ P' y) x y ⇒ P'' x y) ∧
+        (∀x y z. P'' x y ∧ P'' y z ⇒ P'' x z) ⇒
+        P'' x y` by METIS_TAC[]
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P''`)
+THEN REPEAT STRIP_TAC
+THEN METIS_TAC[])
 
 val scc_lemma_1_4_2_1_1_1_3 = store_thm("scc_lemma_1_4_2_1_1_1_3",
-``!PROB vs S. planning_problem(PROB) /\ scc_set PROB S /\ scc_vs (prob_proj (PROB,FDOM PROB.I DIFF (BIGUNION S)),vs)
-                ==> scc_vs(PROB, vs)``,
-cheat(*
-SRW_TAC[][scc_vs_def, SCC_def]
+``!R R' P P'. ~(\x y. P x /\ P y /\ R x y)^+ x y
+              ==> (\x y. (~(P x) \/ ~(P y)) /\  R x y)^+ x y``,
+REWRITE_TAC[TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])
+THEN REPEAT STRIP_TAC
+THEN `(¬R x y ⇒ ¬R' x y) ∧
+      ¬∀P''.
+         (∀x y. (λx y. R x y ∧ P x ∧ P' y) x y ⇒ P'' x y) ∧
+         (∀x y z. P'' x y ∧ P'' y z ⇒ P'' x z) ⇒
+         P'' x y` by METIS_TAC[]
+THEN FIRST_X_ASSUM (MP_TAC o SIMP_RULE(srw_ss())[])
+THEN REPEAT STRIP_TAC
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P''`)
+THEN REPEAT STRIP_TAC
+THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_2_1_1_1_4 = store_thm("scc_lemma_1_4_2_1_1_1_4",
+``!PROB vs v v'. (~(v IN vs) /\ ~(v' IN vs)) /\
+                     ~dep (prob_proj (PROB,FDOM PROB.I DIFF vs),v,v') ==>  ~dep (PROB,v,v')``,
+cheat)
+
+(FULL_SIMP_TAC(bool_ss)[DISJOINT_DEF, INTER_DEF, EXTENSION, GSPEC_ETA, EMPTY_DEF, IN_DEF]
+            THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_2_1_1_1 = store_thm("scc_lemma_1_4_2_1_1_1",
+``!PROB S vs. planning_problem(PROB) /\scc_set PROB S /\ scc_vs(prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S), vs)
+              ==> scc_vs(PROB, vs)``,
+SRW_TAC[][]
+THEN `DISJOINT vs (BIGUNION S')` 
+   by METIS_TAC[scc_lemma_1_4_2_1_1_1_1, scc_lemma_1_4_2_1_1_1_2, graph_plan_lemma_2_2]
+THEN FULL_SIMP_TAC(srw_ss())[scc_vs_def, SCC_def]
+THEN SRW_TAC[][]
 THENL
 [
    MP_TAC(scc_lemma_1_4_1_1_2_1_4 |> Q.SPECL[`PROB`, `BIGUNION S'`])
@@ -396,6 +442,7 @@ THENL
                           `(\v v'. dep (PROB,v,v'))`])
    THEN SRW_TAC[][]  
    ,
+
    MP_TAC(scc_lemma_1_4_1_1_2_1_4 |> Q.SPECL[`PROB`, `BIGUNION S'`])
    THEN SRW_TAC[][]
    THEN MP_TAC(((Q.GEN `R` o Q.GEN `Q` o Q.GEN `x` o Q.GEN `y`) TC_MONOTONE)
@@ -404,41 +451,56 @@ THENL
    THEN SRW_TAC[][]  
    ,
 
-
-   Q.PAT_ASSUM `!x y. P x y ==> Q x y \/ N x y` (MP_TAC o Q.SPECL[`v`, `v'`])
-   THEN SRW_TAC[][]
+   Cases_on `v' IN BIGUNION S'`
    THENL
    [
-     `¬(λv1' v2'. v1' IN vs /\ (v2' IN vs) /\ dep (PROB,v1',v2'))⁺ v v'`
-        by(REWRITE_TAC[TC_DEF]
-        THEN SRW_TAC[][]
-        THEN Q.PAT_ASSUM `¬(λv1' v2'. dep (prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S'),v1',v2'))⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
-        THEN SRW_TAC[][]
-        THEN Q.EXISTS_TAC `P`
-        THEN SRW_TAC[][]
-        THENL
-        [
-           
-           ,
-        ]
-        THEN METIS_TAC[scc_lemma_1_4_1_1_2_1_4])
-     THEN SRW_TAC[][]
-     ,
+      `!s. s IN S' ==> ~(v IN s)`
+         by (FULL_SIMP_TAC(bool_ss)[DISJOINT_DEF, INTER_DEF, EXTENSION, GSPEC_ETA, EMPTY_DEF, IN_DEF]
+            THEN METIS_TAC[])
+      THEN FULL_SIMP_TAC(bool_ss)[IN_BIGUNION]
+      THEN `scc_vs(PROB, s)` by FULL_SIMP_TAC(srw_ss())[scc_set_def]
+      THEN FULL_SIMP_TAC(srw_ss())[scc_vs_def, SCC_def]
+      THEN METIS_TAC[]
+      ,
+
+      Q.PAT_ASSUM `!x y. P x y ==> Q x y \/ N x y` (MP_TAC o Q.SPECL[`v`, `v'`])
+      THEN SRW_TAC[][]
+      THENL
+      [
+         `¬(λv1' v2'. ~(v1' IN  BIGUNION S') /\ ~(v2' IN  BIGUNION S') /\  dep (PROB,v1',v2'))⁺ v v'`
+            by(REWRITE_TAC[TC_DEF]
+            THEN SRW_TAC[][]
+            THEN `~(v IN BIGUNION S')` 
+               by (FULL_SIMP_TAC(bool_ss)[DISJOINT_DEF, INTER_DEF, EXTENSION, GSPEC_ETA, EMPTY_DEF, IN_DEF, BIGUNION]
+                   THEN METIS_TAC[])
+            THEN Q.PAT_ASSUM `¬(λv1' v2'. dep (prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S'),v1',v2'))⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
+            THEN SRW_TAC[][]
+            THEN `~(v IN BIGUNION S')`
+            THEN Q.EXISTS_TAC `P`
+            THEN SRW_TAC[][]
+        
+            THEN METIS_TAC[])
+         THEN 
+
+
+         THEN METIS_TAC[scc_lemma_1_4_1_1_2_1_4]
+         THEN SRW_TAC[][]
+         ,
+        
+      ]      
    ]
-]*))
 
 
-val scc_lemma_1_4_2_1_1_1 = store_thm("scc_lemma_1_4_2_1_1_1",
-``!PROB S vs. planning_problem(PROB) /\scc_set PROB S /\ scc_vs(prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S), vs)
-              ==> scc_vs(PROB, vs)``,
-METIS_TAC[scc_lemma_1_4_2_1_1_1_1, scc_lemma_1_4_2_1_1_1_2, scc_lemma_1_4_2_1_1_1_3, DISJOINT_SYM])
+   scc_lemma_1_4_2_1_1_1_3
+   scc_lemma_1_4_2_1_1_1_4
+)
 
 
 val scc_lemma_1_4_2_1_1 = store_thm("scc_lemma_1_4_2_1_1",
-``!PROB S. scc_set PROB S 
+``!PROB S. planning_problem(PROB) /\ scc_set PROB S
            ==> (problem_scc_set (prob_proj(PROB, FDOM PROB.I DIFF BIGUNION S))) SUBSET (problem_scc_set PROB) ``,
-SRW_TAC[][scc_lemma_1_4_2_1_1, scc_lemma_1_4_2_1_1_1]
-)
+SRW_TAC[][problem_scc_set_def, SUBSET_DEF]
+THEN METIS_TAC[scc_lemma_1_4_2_1_1_1])
 
                 
 val scc_lemma_1_4_2_1_2 = store_thm("scc_lemma_1_4_2_1_2",
