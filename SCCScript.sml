@@ -30,7 +30,9 @@ val scc_tc_inclusion = store_thm("scc_tc_inclusion",
               ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
 
 cheat
-(* REWRITE_TAC[SCC_def]
+(* 
+TC_INDUCT_TAC(* check tc_cases1 proof for reference on how to use it*)
+REWRITE_TAC[SCC_def]
 THEN SRW_TAC[][]
 THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
 THEN FULL_SIMP_TAC(bool_ss)[Once TC_DEF]

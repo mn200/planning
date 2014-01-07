@@ -1,5 +1,5 @@
-
-open HolKernel Parse boolLib bossLib;
+open HolKernel Parse boolLib QLib tautLib mesonLib metisLib
+     simpLib boolSimps BasicProvers;
 open finite_mapTheory
 open arithmeticTheory
 open pred_setTheory
@@ -422,23 +422,150 @@ THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P''`)
 THEN REPEAT STRIP_TAC
 THEN METIS_TAC[])
 
+val scc_lemma_x = store_thm("scc_lemma_x",
+  ``!R x z. (R x z \/ ?y:'a. R x y /\ TC R y z) ==> TC R x z ``,
+SRW_TAC[][]
+THEN1 METIS_TAC[MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]
+THEN METIS_TAC[(REWRITE_RULE[transitive_def] TC_TRANSITIVE) |> Q.SPEC `R`, 
+               MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]);
+
+val TC_CASES1_RW = store_thm("TC_CASES1_RW",
+``!R x z. (R x z \/ ?y:'a. R x y /\ TC R y z) <=> TC R x z ``,
+MESON_TAC[TC_CASES1, scc_lemma_x])
 
 val scc_lemma_1_4_2_1_1_1_3_2 = store_thm("scc_lemma_1_4_2_1_1_1_3_2",
-``!R R' P x y. ((!x y. (P x /\ P y ==> (~R x y ==> ~R' x y))) /\ ~((\x y. R x y)^+ x y) /\ P x /\ P y)
-              ==> ( ~(R'^+ x y) \/ (?z. ~P z /\ R'^+ x z /\ R'^+ z y))``,
+``!R R' P x y. (reflexive R /\ reflexive R' 
+               /\ (!x y. (P x /\ P y ==> (~(R x y) ==> ~(R' x y))))
+               (* /\ (!x y. R x y ==> R' x y) /\ (!x y. P x /\ P y ==> ((R' x y) ==> (R x y)))
+               /\ (!x y. ~R' x y ==> ~R x y) 
+               /\ (!x y. P x /\ P y ==> ((R' x y) ==> (R x y)))*)               
+               /\ (~(\x y. R x y)^+ x y ))       (* /\ P x /\ P y)^+ x y)) *)
+              ==> ( ~((\x y. R' x y )^+ x y) \/ (?z. ~P z /\ R'^+ x z /\ R'^+ z y))``,
 cheat(*
 SRW_TAC[][]
-THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
+THEN Cases_on `P y`
 
-THEN Q.PAT_ASSUM `∀z. ¬P z ⇒ R'⁺ x z ⇒ ¬R'⁺ z y` (MP_TAC o REWRITE_RULE[TC_DEF, AND_IMP_INTRO])
-THEN REPEAT STRIP_TAC
+THENL
+[
 
-THEN Q.PAT_ASSUM `¬(λx y. R x y)⁺ x y` (MP_TAC o SIMP_RULE(srw_ss())[TC_DEF])
-THEN REPEAT STRIP_TAC
+   Cases_on `P x`
+   THENL
+   [
+      Cases_on `∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z y`
+      THEN1 METIS_TAC[]
+      THEN SRW_TAC[][]
+      THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
+      THEN Q.PAT_ASSUM `¬(λx y. R x y)⁺ x y` (MP_TAC o  REWRITE_RULE[Once (GSYM TC_CASES1_RW)] ) (* REWRITE_RULE[(TC_DEF)]) *)
+      THEN REPEAT STRIP_TAC
+      THEN FULL_SIMP_TAC(srw_ss())[]
+      THEN Q.PAT_ASSUM `(λx y. R' x y)⁺ x y` (MP_TAC o  REWRITE_RULE[Once (GSYM TC_CASES1_RW)] ) (* REWRITE_RULE[(TC_DEF)]) *)
+      THEN REPEAT STRIP_TAC
+      THEN FULL_SIMP_TAC(srw_ss())[]
+      THEN1 METIS_TAC[]
+      THEN 
 
-THEN Q.PAT_ASSUM `R'⁺ x y` (MP_TAC o SIMP_RULE(srw_ss())[TC_DEF])
-THEN REPEAT STRIP_TAC
 
+      THEN Q.PAT_ASSUM `∀z. P z ∨ ¬R'⁺ x z ∨ ¬R'⁺ z y` (MP_TAC o REWRITE_RULE[(TC_DEF)])
+      THEN REPEAT STRIP_TAC
+      THEN FULL_SIMP_TAC(srw_ss())[]
+      THEN Q.PAT_ASSUM `R'⁺ x y` (MP_TAC o REWRITE_RULE[(TC_DEF)])
+      THEN REPEAT STRIP_TAC
+      THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P'`)
+      THEN REPEAT STRIP_TAC
+        
+      ]
+
+      THEN `~R x y` by METIS_TAC [(MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `(\x y. R x y)`))]
+      THEN FULL_SIMP_TAC(srw_ss())[]
+      THEN MESON_TAC[]
+      THEN REWRITE_TAC[Once(GSYM TC_CASES1_RW)]
+      THEN SRW_TAC[][]
+      THEN Q.PAT_ASSUM `¬(λx y. R x y)⁺ x y` (MP_TAC o SIMP_RULE(srw_ss())[] o REWRITE_RULE[Once (GSYM TC_CASES1_RW)])
+      THEN SRW_TAC[][]
+
+      THEN SRW_TAC[][TC_DEF]
+      THEN FIRST_X_ASSUM (MP_TAC o REWRITE_RULE[TC_DEF])
+      THEN SRW_TAC[][]
+      THEN Q.PAT_ASSUM `¬(λx y. R x y)⁺ x y` (MP_TAC o SIMP_RULE(srw_ss())[TC_DEF])
+      THEN SRW_TAC[][]
+      THEN SRW_TAC[][TC_DEF]
+      THEN Q.EXISTS_TAC `(\x y. P' x y /\ (~P x \/  ~P y))`
+      THEN SRW_TAC[][]
+      THENL
+      
+
+      LAST_X_ASSUM (MP_TAC o Q.SPECL [`x`, `y`])
+      THEN SRW_TAC[][]
+      (* THEN `¬R x y ⇒ ¬R' x y` by METIS_TAC[]*)
+      THEN1 METIS_TAC [(MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `(\x y. R x y)`))]
+      THEN LAST_X_ASSUM (MP_TAC o REWRITE_RULE[TC_DEF])
+      THEN SRW_TAC[][]
+      THEN Q.PAT_ASSUM `R'⁺ x y` (MP_TAC o REWRITE_RULE[TC_DEF])
+      THEN REPEAT STRIP_TAC
+      THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `(\x y. P' x y /\ P y)`)
+      THEN SRW_TAC[][]
+      THEN (MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `(\x y. R x y)`))
+      ,
+      FIRST_X_ASSUM (MP_TAC o Q.SPEC `x`)
+      THEN SRW_TAC[][]
+      THEN METIS_TAC[TC_RULES |> Q.SPEC `R'`]      
+   ]
+
+   REPEAT STRIP_TAC
+   THEN LAST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN REPEAT STRIP_TAC
+   THEN LAST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN REPEAT STRIP_TAC
+
+   ,
+   FIRST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN SRW_TAC[][]
+   THEN METIS_TAC[TC_RULES |> Q.SPEC `R'`]
+   
+
+]
+
+
+
+
+
+Cases_on `P y`
+THENL
+[
+
+   Cases_on `P x`
+   THENL
+   [
+      LAST_X_ASSUM (MP_TAC o Q.SPECL [`x`, `y`])
+      THEN SRW_TAC[][]
+      (* THEN `¬R x y ⇒ ¬R' x y` by METIS_TAC[]*)
+      THEN1 METIS_TAC [(MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `(\x y. R x y)`))]
+      THEN LAST_X_ASSUM (MP_TAC o REWRITE_RULE[TC_DEF])
+      THEN SRW_TAC[][]
+      THEN Q.PAT_ASSUM `R'⁺ x y` (MP_TAC o REWRITE_RULE[TC_DEF])
+      THEN REPEAT STRIP_TAC
+      THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `(\x y. P' x y /\ P y)`)
+      THEN SRW_TAC[][]
+      THEN (MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `(\x y. R x y)`))
+      ,
+      FIRST_X_ASSUM (MP_TAC o Q.SPEC `x`)
+      THEN SRW_TAC[][]
+      THEN METIS_TAC[TC_RULES |> Q.SPEC `R'`]      
+   ]
+
+   REPEAT STRIP_TAC
+   THEN LAST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN REPEAT STRIP_TAC
+   THEN LAST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN REPEAT STRIP_TAC
+
+   ,
+   FIRST_X_ASSUM (MP_TAC o Q.SPEC `y`)
+   THEN SRW_TAC[][]
+   THEN METIS_TAC[TC_RULES |> Q.SPEC `R'`]
+   
+
+]
 
 THEN SRW_TAC[][]
 THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])

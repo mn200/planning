@@ -13,11 +13,11 @@ struct
   in end;
   val _ = Theory.link_parents
           ("utils",
-          Arbnum.fromString "1389050867",
-          Arbnum.fromString "421699")
+          Arbnum.fromString "1389067010",
+          Arbnum.fromString "976086")
           [("list",
-           Arbnum.fromString "1378778539",
-           Arbnum.fromString "899441")];
+           Arbnum.fromString "1380541561",
+           Arbnum.fromString "111594")];
   val _ = Theory.incorporate_types "utils" [];
 
   val idvector = 
