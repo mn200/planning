@@ -25,82 +25,184 @@ THEN METIS_TAC[])
 
 
 
+
+
+val scc_lemma_x = store_thm("scc_lemma_x",
+  ``!R x z. (R x z \/ ?y:'a. R x y /\ TC R y z) ==> TC R x z ``,
+SRW_TAC[][]
+THEN1 METIS_TAC[MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]
+THEN METIS_TAC[(REWRITE_RULE[transitive_def] TC_TRANSITIVE) |> Q.SPEC `R`, 
+               MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]);
+
+val TC_CASES1_RW = store_thm("TC_CASES1_RW",
+``!R x z. (R x z \/ ?y:'a. R x y /\ TC R y z) <=> TC R x z ``,
+MESON_TAC[TC_CASES1, scc_lemma_x])
+
+
+
+val scc_lemma_xx = store_thm("scc_lemma_xx",
+``!R R' P P'. (!x y. P x /\ P' y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P' y)^+ x y)) 
+              ==> (!x y. P x /\ P' y ==> (R'^+ x y))``,
+REWRITE_TAC[TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])
+THEN REPEAT STRIP_TAC
+THEN `(R x y ⇒ R' x y) ∧
+      ∀P''.
+        (∀x y. (λx y. R x y ∧ P x ∧ P' y) x y ⇒ P'' x y) ∧
+        (∀x y z. P'' x y ∧ P'' y z ⇒ P'' x z) ⇒
+        P'' x y` by METIS_TAC[]
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P''`)
+THEN REPEAT STRIP_TAC
+THEN METIS_TAC[])
+
+
+
+
+val scc_lemma_1_4_2_1_1_1_3_2_1_1 = store_thm("scc_lemma_1_4_2_1_1_1_3_2_1_1",
+``!R P x y. ~R^+ x y
+            ==> ~(\x y. R x y /\ P x y) ^+ x y``,
+REWRITE_TAC[TC_DEF]
+THEN SRW_TAC[][]
+THEN Q.EXISTS_TAC `P'`
+THEN SRW_TAC[][]
+THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_2_1_1_1_3_2_1 = store_thm("scc_lemma_1_4_2_1_1_1_3_2_1",
+``!R R' P x y. ((!x y. P x  y ==> R' x y ==> R x y)                  
+               /\ ~R^+ x y )
+              ==>  ~((\x y. R' x y /\ P x y)^+ x y)``,
+SRW_TAC[][]
+THEN `¬(λx y. R x y /\ P x  y)⁺ x y` 
+   by METIS_TAC[ scc_lemma_1_4_2_1_1_1_3_2_1_1 |> Q.SPECL [`R`, `(\x y. P x y)`, `x`, `y`]]
+THEN FULL_SIMP_TAC(srw_ss())[TC_DEF]
+THEN Q.EXISTS_TAC `P'`
+THEN SRW_TAC[][]
+THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_3",
+``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
+              ==> (!x y. P x /\ P y ==> (R'^+ x y))``,
+REWRITE_TAC[TC_DEF]
+THEN REPEAT STRIP_TAC
+THEN LAST_ASSUM (MP_TAC o Q.SPECL[`x`, `y`])
+THEN REPEAT STRIP_TAC
+THEN `(R x y ⇒ R' x y) ∧
+        ∀P'.
+          (∀x y. (λx y. R x y ∧ P x ∧ P y) x y ⇒ P' x y) ∧
+          (∀x y z. P' x y ∧ P' y z ⇒ P' x z) ⇒
+          P' x y` by METIS_TAC[]
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P'`)
+THEN REPEAT STRIP_TAC
+THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_2_1_1_1_3_2_2_1 = store_thm("scc_lemma_1_4_2_1_1_1_3_2_2_1",
+``!R P x y. (\x y. R x y /\ P x y)^+ x y
+            ==> R^+ x y``,
+NTAC 2 STRIP_TAC
+THEN HO_MATCH_MP_TAC TC_INDUCT
+THEN SRW_TAC[][]
+THEN1 SRW_TAC[][TC_RULES]
+THEN PROVE_TAC[TC_RULES])
+
+val scc_lemma_1_4_2_1_1_1_3_2_2 = store_thm("scc_lemma_1_4_2_1_1_1_3_2_2",
+``!R'. reflexive R' ==> (!P x y. (R'^+ x y) 
+               ==> ( ((\x y. R' x y /\ P x /\ P y)^+ x y) \/ (?z. ~P z /\ R'^+ x z /\ R'^+ z y)))``,
+NTAC 3 STRIP_TAC
+THEN HO_MATCH_MP_TAC TC_INDUCT
+THEN SRW_TAC[][]
+THENL
+[
+   Cases_on `P y`
+   THEN Cases_on `P x`
+   THEN1 SRW_TAC[][TC_RULES]
+   THEN1( `∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z y` by
+      (Q.EXISTS_TAC `x`
+      THEN SRW_TAC[][]
+      THEN1( FULL_SIMP_TAC(srw_ss())[reflexive_def]
+      THEN SRW_TAC[][TC_RULES])
+      THEN SRW_TAC[][TC_RULES])
+      THEN METIS_TAC[])
+   THEN(`∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z y` by
+      (Q.EXISTS_TAC `y`
+      THEN SRW_TAC[][]
+      THEN1 SRW_TAC[][TC_RULES]
+      THEN FULL_SIMP_TAC(srw_ss())[reflexive_def]
+      THEN SRW_TAC[][TC_RULES])
+      THEN METIS_TAC[])
+   ,
+   PROVE_TAC[REWRITE_RULE[transitive_def] TC_TRANSITIVE]
+   ,
+   MP_TAC(scc_lemma_1_4_2_1_1_1_3_2_2_1 |> Q.SPECL[`R'`, `(\x y. P x /\ P y)`, `x`, `x'`])
+   THEN SRW_TAC[][]
+   THEN `R'⁺ x z` by METIS_TAC[(MATCH_MP AND2_THM (TC_RULES |> Q.SPEC `R'`) |> Q.SPECL [`x`, `y`, `z'`] )]
+   THEN `∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z z` by
+      (Q.EXISTS_TAC `z`
+      THEN SRW_TAC[][]
+      THEN FULL_SIMP_TAC(srw_ss())[reflexive_def]
+      THEN SRW_TAC[][TC_RULES])
+   THEN METIS_TAC[]
+   ,
+   MP_TAC(scc_lemma_1_4_2_1_1_1_3_2_2_1 |> Q.SPECL[`R'`, `(\x y. P x /\ P y)`, `x'`, `y`])
+   THEN SRW_TAC[][]
+   THEN `R'⁺ z y` by METIS_TAC[(MATCH_MP AND2_THM (TC_RULES |> Q.SPEC `R'`) |> Q.SPECL [`z`, `x'`, `y`] )]
+   THEN `∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z z` by
+      (Q.EXISTS_TAC `z`
+      THEN SRW_TAC[][]
+      THEN FULL_SIMP_TAC(srw_ss())[reflexive_def]
+      THEN SRW_TAC[][TC_RULES])
+   THEN METIS_TAC[]   
+   ,
+   `R'⁺ x z'` by METIS_TAC[(MATCH_MP AND2_THM (TC_RULES |> Q.SPEC `R'`))]
+   THEN `∃z. ¬P z ∧ R'⁺ x z ∧ R'⁺ z z` by
+      (Q.EXISTS_TAC `z'`
+      THEN SRW_TAC[][]
+      THEN FULL_SIMP_TAC(srw_ss())[reflexive_def]
+      THEN SRW_TAC[][TC_RULES])
+   THEN METIS_TAC[]         
+])
+
+val scc_lemma_1_4_2_1_1_1_3_2 = store_thm("scc_lemma_1_4_2_1_1_1_3_2",
+``!R R' P x y. (reflexive R' 
+               /\ (!x y. P x /\ P y ==> (R' x y ==> R x y))
+               /\ (~R ^+ x y ))       
+              ==> ( ~(R'^+ x y) \/ (?z. ~P z /\ R'^+ x z /\ R'^+ z y))``,
+SRW_TAC[][]
+THEN Cases_on `¬R'⁺ x y`
+THEN1 METIS_TAC[]
+THEN FULL_SIMP_TAC(srw_ss())[]
+THEN MP_TAC(scc_lemma_1_4_2_1_1_1_3_2_1 |> Q.SPECL[`R`, `R'`, `(\x y. P x /\ P y)`,  `x` ,`y`] )
+THEN SRW_TAC[][]
+THEN MP_TAC(scc_lemma_1_4_2_1_1_1_3_2_2 |> Q.SPEC `R'`)
+THEN SRW_TAC[][]
+THEN FIRST_X_ASSUM  (MP_TAC o Q.SPECL[`P` , `x`, `y`])
+THEN SRW_TAC[][])
+
+val scc_tc_inclusion = store_thm("scc_tc_inclusion",
+``!R vs v v'. v IN vs /\ v' IN vs/\ SCC R vs /\ reflexive R
+              ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
+SRW_TAC[][SCC_def]
+THEN LAST_X_ASSUM (MP_TAC o Q.SPECL[`v`, `v'`])
+THEN SRW_TAC[][]
+THEN MP_TAC(scc_lemma_1_4_2_1_1_1_3_2_2  |> Q.SPEC `R`)
+THEN SRW_TAC[][]
+THEN FIRST_X_ASSUM (MP_TAC o Q.SPECL[ `(\v. v IN vs)`, `v`, `v'`])
+THEN SRW_TAC[][]
+THEN METIS_TAC[REWRITE_RULE[transitive_def] (TC_TRANSITIVE |> Q.SPEC `R`)])
+
+
 val scc_tc_inclusion = store_thm("scc_tc_inclusion",
 ``!R vs v v'. v IN vs /\ v' IN vs/\ SCC R vs 
               ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
 
 cheat
 (* 
-TC_INDUCT_TAC(* check tc_cases1 proof for reference on how to use it*)
-REWRITE_TAC[SCC_def]
-THEN SRW_TAC[][]
-THEN SPOSE_NOT_THEN STRIP_ASSUME_TAC
-THEN FULL_SIMP_TAC(bool_ss)[Once TC_DEF]
-THEN FULL_SIMP_TAC(bool_ss)[Once TC_DEF]
-
-
-
-THEN `!P. ∀v v'.
-        v ∈ vs ∧ v' ∈ vs ⇒
-        ((∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-           P v v')` by PROVE_TAC[]
-
-THEN FIRST_X_ASSUM (MP_TAC o REWRITE_RULE[AND_IMP_INTRO] o Q.SPEC `P`)
-THEN REPEAT STRIP_TAC
-THEN `∀v v'.
-             (v ∈ vs ∧ v' ∈ vs) ∧ (∀x y. R x y ⇒ P x y) ⇒
-             P v v'` by METIS_TAC[]
-
-
-THEN Q.PAT_ASSUM `∀x y. (λv v'. R v v' ∧ v ∈ vs ∧ v' ∈ vs) x y ⇒ P x y` (MP_TAC o SIMP_RULE(srw_ss())[])
-THEN REPEAT STRIP_TAC
-THEN `∀v v'.
-        (v ∈ vs ∧ v' ∈ vs) ∧ (∀x y. R x y ⇒ P x y) ⇒
-        P v v'` by PROVE_TAC[]
-THEN 
-
-
-
-THEN FIRST_X_ASSUM MATCH_MP_TAC
-
-
-
-THEN LAST_ASSUM (MP_TAC o Q.SPECL[`v`, `v'`] )
-THEN STRIP_TAC
-THEN Q.PAT_ASSUM `∀v v'.
-        v ∈ vs ∧ v' ∉ vs ⇒
-        ¬(∀P.
-            (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-            P v v') ∨
-        ¬∀P.
-           (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-           P v' v` (MP_TAC o SIMP_RULE(bool_ss)[NOT_FORALL_THM])
-THEN REPEAT STRIP_TAC
-THEN `R⁺ v v' ∧ R⁺ v' v` by METIS_TAC[]
-THEN `∀v'. v' ∉ vs ⇒ ¬R⁺ v v' ∨ ¬R⁺ v' v` by METIS_TAC[]
-THEN REWRITE_TAC[SCC_def, TC_DEF]
-THEN REPEAT STRIP_TAC
-THEN Q.PAT_ASSUM `∀v v'.
-             v ∈ vs ∧ v' ∈ vs ⇒
-             (∀P.
-                (∀x y. R x y ⇒ P x y) ∧
-                (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-                P v v') ∧
-             ∀P.
-               (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-               P v' v` (MP_TAC o Q.SPECL[`v`, `v'`])
-THEN REPEAT STRIP_TAC 
-THEN `(∀P.
-         (∀x y. R x y ⇒ P x y) ∧ (∀x y z. P x y ∧ P y z ⇒ P x z) ⇒
-         P v v')` by METIS_TAC[]
-THEN 
-METIS_TAC[]
-THEN ASM_SIMP_TAC(bool_ss)[]
-THEN REPEAT STRIP_TAC
-SRW_TAC[][]
-THEN Q.PAT_ASSUM `R⁺ v v'` (MP_TAC o REWRITE_RULE[TC_DEF])
-THEN REPEAT STRIP_TAC
-THEN TC_INDUCT *) )
+SRW_TAC[][SCC_def]
+THEN scc_lemma_1_4_2_1_1_1_3_2_2
+*) )
 
 
 val SCC_loop_contradict = store_thm("SCC_loop_contradict",
