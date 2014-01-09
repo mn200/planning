@@ -9,7 +9,9 @@ sig
 
   (*  Theorems  *)
     val SCC_loop_contradict : thm
+    val TC_CASES1_NEQ : thm
     val TC_CASES1_RW : thm
+    val TC_CASES2_NEQ : thm
     val TC_CASES2_RW : thm
     val scc_disjoint_lemma : thm
     val scc_lemma_1_4_1_1_2_1_3 : thm
@@ -49,9 +51,17 @@ sig
       |- ∀R vs vs'.
            (lift R)⁺ vs vs' ∧ (lift R)⁺ vs' vs ⇒ ¬SCC R vs ∧ ¬SCC R vs'
 
+   [TC_CASES1_NEQ]  Theorem
+
+      |- ∀R x z. R⁺ x z ⇒ R x z ∨ ∃y. x ≠ y ∧ y ≠ z ∧ R x y ∧ R⁺ y z
+
    [TC_CASES1_RW]  Theorem
 
       |- ∀R x z. R x z ∨ (∃y. R x y ∧ R⁺ y z) ⇔ R⁺ x z
+
+   [TC_CASES2_NEQ]  Theorem
+
+      |- ∀R x z. R⁺ x z ⇒ R x z ∨ ∃y. x ≠ y ∧ y ≠ z ∧ R⁺ x y ∧ R y z
 
    [TC_CASES2_RW]  Theorem
 

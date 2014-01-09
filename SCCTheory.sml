@@ -12,10 +12,10 @@ struct
   local open listTheory
   in end;
   val _ = Theory.link_parents
-          ("SCC",Arbnum.fromString "1389242044",Arbnum.fromString "286350")
+          ("SCC",Arbnum.fromString "1389264961",Arbnum.fromString "228781")
           [("list",
-           Arbnum.fromString "1378778539",
-           Arbnum.fromString "899441")];
+           Arbnum.fromString "1380541561",
+           Arbnum.fromString "111594")];
   val _ = Theory.incorporate_types "SCC" [];
 
   val idvector = 
@@ -104,6 +104,12 @@ struct
   val op scc_tc_inclusion =
     DT(["DISK_THM"],
        [read"(%17 (|%3. (%16 (|%9. (%15 (|%6. (%15 (|%7. ((%24 ((%20 ((%28 $1) $2)) ((%20 ((%28 $0) $2)) ((%20 ((%30 $3) $2)) (%37 $3))))) (((%31 (|%6. (|%7. ((%20 (($5 $1) $0)) ((%20 ((%28 $1) $4)) ((%28 $0) $4)))))) $1) $0))))))))))"])
+  val op TC_CASES1_NEQ =
+    DT(["DISK_THM"],
+       [read"(%17 (|%3. (%15 (|%12. (%15 (|%14. ((%24 (((%31 $2) $1) $0)) ((%33 (($2 $1) $0)) (%25 (|%13. ((%20 (%38 ((%21 $2) $0))) ((%20 (%38 ((%21 $0) $1))) ((%20 (($3 $2) $0)) (((%31 $3) $0) $1))))))))))))))"])
+  val op TC_CASES2_NEQ =
+    DT(["DISK_THM"],
+       [read"(%17 (|%3. (%15 (|%12. (%15 (|%14. ((%24 (((%31 $2) $1) $0)) ((%33 (($2 $1) $0)) (%25 (|%13. ((%20 (%38 ((%21 $2) $0))) ((%20 (%38 ((%21 $0) $1))) ((%20 (((%31 $3) $2) $0)) (($3 $0) $1))))))))))))))"])
   val op SCC_loop_contradict =
     DT(["cheat"],
        [read"(%17 (|%3. (%16 (|%9. (%16 (|%10. ((%24 ((%20 (((%32 (%35 $2)) $1) $0)) (((%32 (%35 $2)) $0) $1))) ((%20 (%38 ((%30 $2) $1))) (%38 ((%30 $2) $0))))))))))"])
@@ -124,6 +130,8 @@ struct
    ("scc_lemma_1_4_2_1_1_1_3_2_2",scc_lemma_1_4_2_1_1_1_3_2_2,DB.Thm),
    ("scc_lemma_1_4_2_1_1_1_3_2",scc_lemma_1_4_2_1_1_1_3_2,DB.Thm),
    ("scc_tc_inclusion",scc_tc_inclusion,DB.Thm),
+   ("TC_CASES1_NEQ",TC_CASES1_NEQ,DB.Thm),
+   ("TC_CASES2_NEQ",TC_CASES2_NEQ,DB.Thm),
    ("SCC_loop_contradict",SCC_loop_contradict,DB.Thm)]
 
   local open Portable GrammarSpecials Parse
