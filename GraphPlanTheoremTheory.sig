@@ -295,10 +295,10 @@ sig
 
       |- ∀PROB v1 v2.
            dep (PROB,v1,v2) ⇔
-           ∃a.
-             a ∈ PROB.A ∧
-             (v1 ∈ FDOM (FST a) ∧ v2 ∈ FDOM (SND a) ∨
-              v1 ∈ FDOM (SND a) ∧ v2 ∈ FDOM (SND a))
+           (∃a.
+              a ∈ PROB.A ∧
+              (v1 ∈ FDOM (FST a) ∧ v2 ∈ FDOM (SND a) ∨
+               v1 ∈ FDOM (SND a) ∧ v2 ∈ FDOM (SND a))) ∨ (v1 = v2)
 
    [dep_var_set_def]  Definition
 

@@ -1,4 +1,6 @@
 open HolKernel Parse boolLib bossLib;
+(*open HolKernel Parse boolLib QLib tautLib mesonLib metisLib
+     simpLib boolSimps BasicProvers; *)
 open pred_setTheory;
 open relationTheory;
 val _ = new_theory "SCC";
@@ -7,7 +9,7 @@ val _ = new_theory "SCC";
 
 val SCC_def = Define`SCC R vs <=> (!v v'. v IN vs /\ v' IN vs ==> R^+ v v' /\ R^+ v' v)
                                   /\ (!v v'. v IN vs /\ ~(v' IN vs) ==> ~(R^+ v v') \/ ~(R^+ v' v))
-                                  /\ ~(vs = EMPTY)`
+                                  /\ ?v v'. ~(v = v') /\ v IN vs /\ v' IN vs`
 
 (* A function to lift a relation ('a -> 'a -> bool) to (('a -> bool) -> ('a -> bool) -> bool), i.e
 yeilds a relation between sets of objects. *)
@@ -36,7 +38,9 @@ THEN METIS_TAC[(REWRITE_RULE[transitive_def] TC_TRANSITIVE) |> Q.SPEC `R`,
 
 val TC_CASES1_RW = store_thm("TC_CASES1_RW",
 ``!R x z. (R x z \/ ?y:'a. R x y /\ TC R y z) <=> TC R x z ``,
-MESON_TAC[TC_CASES1, scc_lemma_x])
+mesonLib.MESON_TAC[TC_CASES1, scc_lemma_x])
+
+
 
 
 
@@ -56,6 +60,17 @@ THEN FIRST_X_ASSUM (MP_TAC o Q.SPEC `P''`)
 THEN REPEAT STRIP_TAC
 THEN METIS_TAC[])
 
+
+val scc_lemma_xxx = store_thm("scc_lemma_xxx",
+  ``!R x z. (R x z \/ ?y:'a. R^+ x y /\ R y z) ==> TC R x z ``,
+SRW_TAC[][]
+THEN1 METIS_TAC[MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]
+THEN METIS_TAC[(REWRITE_RULE[transitive_def] TC_TRANSITIVE) |> Q.SPEC `R`, 
+               MATCH_MP AND1_THM (TC_RULES |> Q.SPEC `R`)]);
+
+val TC_CASES2_RW = store_thm("TC_CASES2_RW",
+``!R x z. (R x z \/ ?y:'a. R^+ x y /\ R y z) <=> TC R x z ``,
+mesonLib.MESON_TAC[TC_CASES2, scc_lemma_xxx])
 
 
 
@@ -107,6 +122,10 @@ THEN HO_MATCH_MP_TAC TC_INDUCT
 THEN SRW_TAC[][]
 THEN1 SRW_TAC[][TC_RULES]
 THEN PROVE_TAC[TC_RULES])
+
+
+val cond_reflexive_def = Define `cond_reflexive P R = (!x. P x ==> R x x )`
+
 
 val scc_lemma_1_4_2_1_1_1_3_2_2 = store_thm("scc_lemma_1_4_2_1_1_1_3_2_2",
 ``!R'. reflexive R' ==> (!P x y. (R'^+ x y) 
@@ -165,6 +184,9 @@ THENL
    THEN METIS_TAC[]         
 ])
 
+
+
+
 val scc_lemma_1_4_2_1_1_1_3_2 = store_thm("scc_lemma_1_4_2_1_1_1_3_2",
 ``!R R' P x y. (reflexive R' 
                /\ (!x y. P x /\ P y ==> (R' x y ==> R x y))
@@ -194,15 +216,23 @@ THEN SRW_TAC[][]
 THEN METIS_TAC[REWRITE_RULE[transitive_def] (TC_TRANSITIVE |> Q.SPEC `R`)])
 
 
-val scc_tc_inclusion = store_thm("scc_tc_inclusion",
-``!R vs v v'. v IN vs /\ v' IN vs/\ SCC R vs 
-              ==> (\v v'. R v v' /\ v IN vs /\ v' IN vs)^+ v v'``,
 
-cheat
-(* 
-SRW_TAC[][SCC_def]
-THEN scc_lemma_1_4_2_1_1_1_3_2_2
-*) )
+
+val TC_CASES1_NEQ =
+store_thm
+("TC_CASES1_NEQ",
+  ``!R x z. TC R x z ==> R x z \/ ?y:'a. ~(x = y) /\ ~(y = z) /\ R x y /\ TC R y z``,
+GEN_TAC
+ THEN HO_MATCH_MP_TAC TC_INDUCT
+ THEN mesonLib.MESON_TAC [REWRITE_RULE[transitive_def] TC_TRANSITIVE, TC_SUBSET]);
+
+val TC_CASES2_NEQ =
+store_thm
+("TC_CASES2_NEQ",
+  ``!R x z. TC R x z ==> R x z \/ ?y:'a. ~(x = y) /\ ~(y = z) /\ TC R x y /\ R y z``,
+GEN_TAC
+ THEN HO_MATCH_MP_TAC TC_INDUCT
+ THEN METIS_TAC [(REWRITE_RULE[transitive_def] TC_TRANSITIVE) |> Q.SPEC `R`, TC_SUBSET |> Q.SPEC `R`]);
 
 
 val SCC_loop_contradict = store_thm("SCC_loop_contradict",

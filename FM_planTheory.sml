@@ -13,14 +13,14 @@ struct
   in end;
   val _ = Theory.link_parents
           ("FM_plan",
-          Arbnum.fromString "1389179703",
-          Arbnum.fromString "235529")
+          Arbnum.fromString "1389242027",
+          Arbnum.fromString "602681")
           [("sublist",
-           Arbnum.fromString "1389179699",
-           Arbnum.fromString "254937"),
+           Arbnum.fromString "1389242025",
+           Arbnum.fromString "59095"),
            ("finite_map",
-           Arbnum.fromString "1380541675",
-           Arbnum.fromString "645531")];
+           Arbnum.fromString "1378778625",
+           Arbnum.fromString "519479")];
   val _ = Theory.incorporate_types "FM_plan" [("problem", 1)];
 
   val idvector = 

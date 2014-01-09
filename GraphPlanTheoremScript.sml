@@ -10,7 +10,8 @@ open utilsTheory;
 open FM_planTheory 
 open sublistTheory;
 val _ = new_theory "GraphPlanTheorem";
-val dep_def = Define`dep(PROB, v1, v2) <=>  (?a. (a IN PROB.A) /\ (((v1 IN (FDOM (FST a))) /\ (v2 IN (FDOM (SND a))) ) \/ ((v1 IN (FDOM (SND a))) /\ (v2 IN (FDOM (SND a))) )) ) `;
+
+val dep_def = Define`dep(PROB, v1, v2) <=>  (?a. (a IN PROB.A) /\ (((v1 IN (FDOM (FST a))) /\ (v2 IN (FDOM (SND a))) ) \/ ((v1 IN (FDOM (SND a))) /\ (v2 IN (FDOM (SND a))) )) ) \/ (v1 = v2) `;
 
 
 val dep_var_set_def  = Define`dep_var_set (PROB, vs1, vs2) <=> ? v1 v2. (v1 IN vs1) /\ (v2 IN vs2) /\ (DISJOINT vs1 vs2) /\ dep(PROB, v1, v2)`;
