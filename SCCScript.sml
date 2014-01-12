@@ -6,10 +6,10 @@ open relationTheory;
 val _ = new_theory "SCC";
 
 
-
 val SCC_def = Define`SCC R vs <=> (!v v'. v IN vs /\ v' IN vs ==> R^+ v v' /\ R^+ v' v)
                                   /\ (!v v'. v IN vs /\ ~(v' IN vs) ==> ~(R^+ v v') \/ ~(R^+ v' v))
-                                  /\ ?v v'. ~(v = v') /\ v IN vs /\ v' IN vs`
+                                  (*/\ ?v v'. ~(v = v') /\ v IN vs /\ v' IN vs*)
+                                  /\ ~(vs = {})`
 
 (* A function to lift a relation ('a -> 'a -> bool) to (('a -> bool) -> ('a -> bool) -> bool), i.e
 yeilds a relation between sets of objects. *)
@@ -98,7 +98,8 @@ THEN METIS_TAC[])
 
 
 val scc_lemma_1_4_1_1_2_1_3 = store_thm("scc_lemma_1_4_1_1_2_1_3",
-``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
+``!R R' P. (!x y. P x /\ P y ==> (R x y ==> R' x y) 
+           /\ ((\x y. R x y /\ P x /\ P y)^+ x y)) 
               ==> (!x y. P x /\ P y ==> (R'^+ x y))``,
 REWRITE_TAC[TC_DEF]
 THEN REPEAT STRIP_TAC

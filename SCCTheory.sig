@@ -34,8 +34,7 @@ sig
       |- ∀R vs.
            SCC R vs ⇔
            (∀v v'. v ∈ vs ∧ v' ∈ vs ⇒ R⁺ v v' ∧ R⁺ v' v) ∧
-           (∀v v'. v ∈ vs ∧ v' ∉ vs ⇒ ¬R⁺ v v' ∨ ¬R⁺ v' v) ∧
-           ∃v v'. v ≠ v' ∧ v ∈ vs ∧ v' ∈ vs
+           (∀v v'. v ∈ vs ∧ v' ∉ vs ⇒ ¬R⁺ v v' ∨ ¬R⁺ v' v) ∧ vs ≠ ∅
 
    [cond_reflexive_def]  Definition
 
