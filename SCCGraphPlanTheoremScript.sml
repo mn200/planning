@@ -375,8 +375,11 @@ THEN SRW_TAC[][])
 
 
 val scc_lemma_1_4_2_1_1_1_4 = store_thm("scc_lemma_1_4_2_1_1_1_4",
-``!PROB. prob_proj(PROB, FDOM PROB.I) = PROB``,
-cheat)
+``!PROB. planning_problem(PROB) ==> (prob_proj(PROB, FDOM PROB.I) = PROB)``,
+cheat
+(* SRW_TAC[][prob_proj_def, planning_problem_def, DRESTRICT_FDOM ]
+THEN 
+*))
  
 val scc_lemma_1_4_2_1_1_1 = store_thm("scc_lemma_1_4_2_1_1_1",
 ``!PROB S vs. planning_problem(PROB)
@@ -769,13 +772,12 @@ val scc_lemma_1_4_2_1_3_1 = store_thm("scc_lemma_1_4_2_1_3_1",
              /\ (!vs''. (dep_var_set (PROB,vs,vs'')) /\ scc_vs(PROB, vs'') 
                          ==> vs'' IN S)
              ==> vs IN single_child_ancestors PROB (BIGUNION S)``,
-cheat(* 
 SRW_TAC[][single_child_ancestors_def]
 THENL
 [
    MP_TAC(scc_lemma_1_4_2_1_2_1_2 |> Q.SPECL [`PROB`, `S'`, `vs`])
    THEN SRW_TAC[][]
-   THEN FULL_SIMP_TAC(srw_ss())[EXTENSION, DISJOINT_DEF, INTER_DEF, GSPEC_ETA, scc_vs_def, SCC_def]
+   THEN FULL_SIMP_TAC(srw_ss())[EXTENSION, DISJOINT_DEF, INTER_DEF, GSPEC_ETA, scc_vs_def, SCC_def, SUBSET_DEF]
    THEN METIS_TAC[]
    ,
    FIRST_X_ASSUM (MP_TAC o Q.SPEC `vs'`)
@@ -804,7 +806,7 @@ THENL
    THEN FIRST_X_ASSUM (MP_TAC o MATCH_MP TC_CASES2 )
    THEN SRW_TAC[][]
    THEN METIS_TAC[SUBSET_BIGUNION_I]
-] *))
+])
 
 
 val scc_lemma_1_4_2_1_3 = store_thm("scc_lemma_1_4_2_1_3",
