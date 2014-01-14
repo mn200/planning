@@ -760,6 +760,7 @@ THEN METIS_TAC[])
 
 
 (*
+
 val scc_lemma_1_4_2_1_3_1 = store_thm("scc_lemma_1_4_2_1_3_1",
 ``!PROB vs S. planning_problem(PROB) /\ scc_vs(PROB, vs) /\ scc_set PROB S 
              /\ childless_vs(PROB, BIGUNION S) /\ ~(vs IN S)
@@ -842,7 +843,6 @@ THEN METIS_TAC[scc_lemma_1_4_2_1_3])
 val scc_lemma_1_4_2_1_3_1 = store_thm("scc_lemma_1_4_2_1_3_1",
 ``!R x y. (!z. ~R y z)
           ==> (!z. R^+ x z ==> (z = y) \/ ~(!a. R x a ==> (a = y))) ``,
-
 NTAC 4 STRIP_TAC
 THEN Q.SPEC_TAC(`x`, `x`)
 THEN FULL_SIMP_TAC(srw_ss())[]
@@ -1109,11 +1109,14 @@ val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
 cheat
 (*
 SRW_TAC[][member_leaves_def, SUBSET_DEF]
+
 THEN1(`scc_set PROB (single_child_ancestors PROB vs)` by SRW_TAC[][scc_set_def, single_child_ancestors_def]
       THEN FULL_SIMP_TAC(srw_ss())[scc_lemma_1_4_3_11]
       THEN METIS_TAC[SIMP_RULE(srw_ss())[GSPEC_ETA, problem_scc_set_def, SUBSET_DEF, IN_DEF] (scc_lemma_1_4_2_1_1 |> Q.SPEC`prob_proj(PROB, FDOM PROB.I DIFF vs)`
                                                                |> Q.SPEC `(single_child_ancestors PROB vs)`), graph_plan_lemma_2_2, scc_lemma_1_4_3_12])
-THEN1()
+
+THEN1(FULL_SIMP_TAC(srw_ss())[scc_lemma_1_4_3_11]
+      )
 *))
 
 (*val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
