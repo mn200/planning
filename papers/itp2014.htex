@@ -1,0 +1,35 @@
+\documentclass{llncs}
+
+\title{Mechanising Theoretical Bounds in Planning Problems}
+\author{Mohammad Abdulaziz \and Charles Gretton \and Michael Norrish}
+
+\institute{Canberra Research Lab., NICTA}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We verify a theorem in a recent IJCAI paper on planning bounds, finding and fixing a significant bug along the way.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+\section{Modelling and Definitions}
+\label{sec:modelling}
+
+\section{A Bug}
+\label{sec:bug}
+
+\section{The Theorem}
+\label{sec:theorem}
+
+\subsection{Proof Strategy}
+\label{sec:proof-strategy}
+
+\subsection{The Proof and Its Lemmas}
+\label{sec:lemmas}
+
+\section{Conclusion}
+
+\end{document}
