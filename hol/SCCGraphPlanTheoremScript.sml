@@ -861,6 +861,17 @@ METIS_TAC[scc_lemma_1_4_2_1_3_1])
 
 
 
+val scc_lemma_1_4_3_2_1 = store_thm("scc_lemma_1_4_3_2_1",
+``!s t. ~(s SUBSET t) ==> ~(s = t)``,
+SRW_TAC[][SUBSET_DEF, EXTENSION]
+THEN METIS_TAC[])
+
+
+val scc_lemma_1_4_3_9 = store_thm("scc_lemma_1_4_3_9",
+``!s t. (s = t) ==> s SUBSET t``,
+METIS_TAC[scc_lemma_1_4_3_2_1])
+
+
 val scc_lemma_1_4_2_1 = store_thm("scc_lemma_1_4_2_1",
 ``!PROB S vs. planning_problem(PROB) /\ (childless_vs(PROB, vs) /\ scc_vs(PROB, vs))
                   ==> (member_leaves(prob_proj(PROB, (FDOM PROB.I) DIFF vs), S)) 
@@ -919,11 +930,6 @@ SRW_TAC[][]
 THEN METIS_TAC[(SIMP_RULE(srw_ss())[] o REWRITE_RULE[SUBSET_DEF, UNION_DEF, GSPEC_ETA]) scc_lemma_1_4_2_1]);
 
 
-
-val scc_lemma_1_4_3_2_1 = store_thm("scc_lemma_1_4_3_2_1",
-``!s t. ~(s SUBSET t) ==> ~(s = t)``,
-SRW_TAC[][SUBSET_DEF, EXTENSION]
-THEN METIS_TAC[])
 
 val scc_lemma_1_4_3_2 = store_thm("scc_lemma_1_4_3_2",
 ``!PROB vs vs'. scc_vs(PROB, vs) /\ vs' IN (single_child_ancestors PROB vs)
@@ -1080,10 +1086,6 @@ val scc_lemma_1_4_3_9 = store_thm("scc_lemma_1_4_3_9",
 ``!s t. (s = t) ==> s SUBSET t``,
 METIS_TAC[scc_lemma_1_4_3_2_1])
 
-val scc_lemma_1_4_3_9 = store_thm("scc_lemma_1_4_3_9",
-``!s t. (s = t) ==> s SUBSET t``,
-METIS_TAC[scc_lemma_1_4_3_2_1])
-
 val scc_lemma_1_4_3_10 = store_thm("scc_lemma_1_4_3_10",
 ``!s t u. (s SUBSET t) ==> s SUBSET (t UNION u)``,
 SRW_TAC[][SUBSET_DEF, UNION_DEF])
@@ -1103,19 +1105,22 @@ val scc_lemma_1_4_3 = store_thm("scc_lemma_1_4_3",
 ``!PROB vs S. planning_problem(PROB) /\ scc_vs(PROB, vs) /\ childless_vs(PROB, vs)
             ==> member_leaves(
                      prob_proj(PROB, 
-                         FDOM PROB.I DIFF (vs UNION BIGUNION (single_child_ancestors PROB vs))), S) SUBSET 
-                            member_leaves(prob_proj(PROB, FDOM PROB.I DIFF vs), S) 
-                                   DIFF (single_child_ancestors PROB vs)``,
+                         FDOM PROB.I DIFF (vs UNION BIGUNION (single_child_ancestors PROB vs))), S) 
+                    SUBSET 
+               (member_leaves(prob_proj(PROB, FDOM PROB.I DIFF vs), S) 
+                                   DIFF ( single_child_ancestors PROB vs))``,
 cheat
 (*
-SRW_TAC[][member_leaves_def, SUBSET_DEF]
+SRW_TAC[][member_leaves_def, INTER_DEF, SUBSET_DEF], Once DIFF_DEF]
 
 THEN1(`scc_set PROB (single_child_ancestors PROB vs)` by SRW_TAC[][scc_set_def, single_child_ancestors_def]
       THEN FULL_SIMP_TAC(srw_ss())[scc_lemma_1_4_3_11]
       THEN METIS_TAC[SIMP_RULE(srw_ss())[GSPEC_ETA, problem_scc_set_def, SUBSET_DEF, IN_DEF] (scc_lemma_1_4_2_1_1 |> Q.SPEC`prob_proj(PROB, FDOM PROB.I DIFF vs)`
                                                                |> Q.SPEC `(single_child_ancestors PROB vs)`), graph_plan_lemma_2_2, scc_lemma_1_4_3_12])
 
-THEN1(FULL_SIMP_TAC(srw_ss())[scc_lemma_1_4_3_11]
+THEN1(
+scc_lemma_1_4_2_1_2
+FULL_SIMP_TAC(srw_ss())[scc_lemma_1_4_3_11]
       )
 *))
 
