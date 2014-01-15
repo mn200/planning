@@ -1553,10 +1553,40 @@ THENL
 ])
 
 
+val scc_main_lemma_1_3_1 = store_thm("scc_main_lemma_1_3_1",
+``!PROB S S'. S' SUBSET S /\ scc_set PROB S ==> scc_set PROB S'``,
+cheat)
 
 val scc_main_lemma_1_3 = store_thm("scc_main_lemma_1_3",
-``!PROB S S'. scc_set PROB S /\ S' SUBSET S ==> scc_set (prob_proj(PROB, FDOM(PROB.I) DIFF BIGUNION S')) S``,
-cheat)
+``!PROB S S'. FINITE S /\ planning_problem(PROB)
+              /\ scc_set PROB S /\ S' SUBSET S ==> scc_set (prob_proj(PROB, FDOM(PROB.I) DIFF BIGUNION S')) S``,
+cheat(*
+SRW_TAC[][]
+THEN MP_TAC(SUBSET_FINITE |> INST_TYPE[alpha |-> ``:'a -> bool``] |> Q.SPEC `S'`)
+THEN ASM_SIMP_TAC(srw_ss())[]
+THEN SRW_TAC[][]
+THEN `FINITE (S'')` by METIS_TAC[]
+THEN Q.UNDISCH_TAC `S'' ⊆ S'`
+THEN Q.UNDISCH_TAC `FINITE S''`
+THEN Q.SPEC_TAC (`S''`, `S''`)
+THEN HO_MATCH_MP_TAC FINITE_INDUCT
+THEN SRW_TAC[][]
+THEN1 METIS_TAC[scc_lemma_1_4_2_1_1_1_4]
+THEN `scc_set (prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S'')) S'` by METIS_TAC[]
+THEN REWRITE_TAC[Once UNION_COMM]
+THEN SRW_TAC[][scc_set_def]
+THEN SRW_TAC[][scc_lemma_1_4_3_11]
+THEN `scc_set PROB S''` by METIS_TAC[scc_main_lemma_1_3_1]
+THEN `scc_vs(PROB, vs)` by METIS_TAC[scc_set_def]
+
+THEN `DISJOINT vs e` by METIS_TAC[scc_lemma_1_4_2_1_2_1_2]
+THEN METIS_TAC[ scc_lemma_1_4_1_1_2_1, DISJOINT_SYM] |> Q.SPECL[`prob_proj (PROB,FDOM PROB.I DIFF BIGUNION S'')`
+                                                 ,`vs`, `e`]
+
+, DISJOINT_SYM, graph_plan_lemma_2_2]
+
+*)
+)
 
 val scc_main_lemma_1_4 = store_thm("scc_main_lemma_1_4",
 ``!PROB vs S. scc_set PROB S /\ scc_vs(PROB, vs) /\ FDOM(PROB.I) SUBSET BIGUNION S 
