@@ -1099,7 +1099,7 @@ SRW_TAC[][single_child_ancestors_def]
 THEN METIS_TAC[scc_main_lemma_xx, scc_lemma_1_4_3_2_1])
 
 val scc_lemma_1_4_3_12 = store_thm("scc_lemma_1_4_3_12",
-``!PROB vs. planning_problem(PROB) 
+``!PROB vs. planning_problem(PROB) /\ scc_vs(PROB, vs)
             ==>  scc_set (prob_proj (PROB,FDOM PROB.I DIFF vs))  (single_child_ancestors PROB vs)``,
 MP_TAC(scc_lemma_1_4_3_12_1)
 THEN SRW_TAC[][scc_set_def]
