@@ -6,4 +6,7 @@
 .HOLMK
 *.aux
 *.log
+*.dvi
 itp2014.pdf
+munge.exe
+munger.o

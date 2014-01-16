@@ -1,0 +1,19 @@
+INCLUDES = ../hol
+
+.PHONY: all
+
+all: itp2014.pdf
+
+munge.exe: prettyPrintingTheory.uo
+	$(protect $(HOLDIR)/bin/mkmunge.exe) prettyPrintingTheory
+
+itp2014.pdf: itp2014.tex holtexbasic.sty
+	pdflatex $<
+
+itp2014.tex: itp2014.htex munge.exe
+	./munge.exe overrides < $< > $@
+
+holtexbasic.sty: $(dprot $(HOLDIR)/src/TeX/holtexbasic.sty)
+	$(CP) $< $@
+
+EXTRA_CLEANS = itp2014.tex holtexbasic.sty itp2014.pdf munge.exe itp2014.aux
