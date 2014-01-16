@@ -1,4 +1,5 @@
 \documentclass{llncs}
+\usepackage{amsfonts}
 
 \title{Mechanising Theoretical Bounds in Planning Problems}
 \author{Mohammad Abdulaziz \and Charles Gretton \and Michael Norrish}
@@ -18,8 +19,58 @@ We verify a theorem in a recent IJCAI paper on planning bounds, finding and fixi
 \section{Modelling and Definitions}
 \label{sec:modelling}
 
+The
+
+legal action sequence
+
+
+Another important concept is the concept of a legal state. A state \(s\)is legal in a specific planning problem if its domain is a subset
+ of the domain of the initial state of the problem \(I_\pi\), formally stated as follows:
+\begin{equation}
+\label{eqn:legal_state}
+FDOM (s) = FDOM (I_\pi)
+\end{equation}
+
+
+Another important function is the function \begin{math} L :\alpha \ problem \rightarrow \mathbb{N} \end{math}
+\begin{equation}
+\label{eqn:L}
+L(\pi) = 
+\end{equation}
+that takes as an argument a planning problem \( \pi \) and returns back the longest action sequence possible to
+ reach any legal state \(s_1\) from any other legal state \(s_0\) in the 
+problem \(\pi\).
+
+
+
 \section{A Bug}
 \label{sec:bug}
+
+One of the main contributions of our work, is that we have realised the presence of a bug in \cite{1}. In this section we will discuss 
+what that bug is. In \cite{1} one of the main contributions is a lemma stating the following
+
+
+This lemma is not correct. The counter example for its validity is 
+
+
+
+Another problem is inherent in the definition of the function \( L\). The problem is that this definition
+enumerates all the possible legal states and then enumerates optimal legal action sequences from each of them to the other
+by taking the shortest of them by applying the function \( min\) to the set of all paths. The problem is when
+there is not a path between two legal states. In this case the function \(min\) has no defined output.
+
+We have fixed that by redefining \(L(\pi)\) in the following way.
+
+\begin{equation}
+\label{eqn:L_new}
+L(\pi) = 
+\end{equation}
+
+
+In this definition we have resolved the issues. 
+Using this definition, the lemma \ref{label: lemma_1} is valid.
+
+
 
 \section{The Theorem}
 \label{sec:theorem}
